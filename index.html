@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INSPECTION RULES // BORDERLINE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@400;500;700&family=Anybody:wght@800;900&display=swap');
+
+  :root {
+    --bg: #08090c;
+    --surface: #0d1017;
+    --surface2: #131922;
+    --surface3: #1a2233;
+    --accent: #ff2d3b;
+    --cyan: #00e5ff;
+    --cyan-ghost: rgba(0,229,255,0.06);
+    --green: #39ff85;
+    --amber: #ffc53d;
+    --violet: #c49cff;
+    --text: #b8c0cc;
+    --bright: #e6eaf0;
+    --dim: #4a5568;
+    --rule: #1a2233;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* === SCANLINE FILM === */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,229,255,0.012) 3px, rgba(0,229,255,0.012) 4px),
+      radial-gradient(ellipse at 50% 0%, rgba(0,229,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* === LAYOUT === */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 4rem 2.5rem 3rem;
+  }
+
+  /* === HERO === */
+  .hero {
+    margin-bottom: 3.5rem;
+    position: relative;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    opacity: 0.6;
+  }
+  .hero h1 {
+    font-family: 'Anybody', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.05;
+    color: var(--bright);
+    margin: 0.6rem 0 0.8rem;
+    letter-spacing: -0.03em;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--cyan);
+    display: inline-block;
+    position: relative;
+  }
+  .hero h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--cyan);
+    opacity: 0.25;
+    border-radius: 2px;
+  }
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--dim);
+    max-width: 520px;
+  }
+  .hero-line {
+    margin-top: 2rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan) 0%, var(--rule) 40%, transparent 100%);
+    opacity: 0.4;
+  }
+
+  /* === SECTIONS === */
+  .section { margin-bottom: 3rem; }
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-tag::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--bright);
+    margin: 1rem 0 0.4rem;
+  }
+  p { margin-bottom: 0.75rem; font-size: 0.95rem; }
+
+  /* === CALLOUTS === */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 1.1rem 1.3rem;
+    margin: 0.8rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .callout::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 2px;
+  }
+  .callout-red::before { background: var(--accent); }
+  .callout-cyan::before { background: var(--cyan); }
+  .callout-amber::before { background: var(--amber); }
+  .callout-red, .callout-cyan, .callout-amber { padding-left: 1.5rem; }
+
+  /* === TAGS === */
+  .t {
+    display: inline-block;
+    padding: 1px 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    font-weight: 400;
+    margin: 2px 1px;
+    border: 1px solid;
+    background: transparent;
+  }
+  .t-clue { color: var(--cyan); border-color: rgba(0,229,255,0.25); background: rgba(0,229,255,0.06); }
+  .t-item { color: var(--green); border-color: rgba(57,255,133,0.2); background: rgba(57,255,133,0.05); }
+  .t-state { color: var(--violet); border-color: rgba(196,156,255,0.2); background: rgba(196,156,255,0.05); }
+  .t-bad { color: var(--accent); border-color: rgba(255,45,59,0.25); background: rgba(255,45,59,0.06); }
+
+  /* === TYPE CARDS === */
+  .type-duo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin: 1rem 0;
+  }
+  @media (max-width: 640px) { .type-duo { grid-template-columns: 1fr; } }
+  .type-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 1.2rem;
+    position: relative;
+  }
+  .type-card-num {
+    font-family: 'Anybody', sans-serif;
+    font-weight: 800;
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--surface2);
+    position: absolute;
+    top: 0.5rem;
+    right: 0.8rem;
+  }
+  .type-card h3 { margin-top: 0; font-size: 0.95rem; }
+
+  /* === DIAGRAM === */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 2rem 1.5rem;
+    margin: 1.2rem 0;
+    position: relative;
+  }
+  .diagram-label {
+    position: absolute;
+    top: 0.6rem; right: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .src-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .src-box {
+    flex: 1;
+    min-width: 180px;
+    max-width: 240px;
+    border: 1px solid var(--rule);
+    padding: 0.9rem;
+    text-align: center;
+    background: var(--surface2);
+    font-size: 0.85rem;
+  }
+  .src-box-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.4rem;
+    opacity: 0.7;
+  }
+  .joiner {
+    align-self: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    font-size: 1.2rem;
+  }
+  .d-arrow {
+    text-align: center;
+    color: var(--dim);
+    font-size: 1rem;
+    padding: 0.3rem 0;
+    opacity: 0.4;
+  }
+  .merged-box {
+    border: 1px solid rgba(0,229,255,0.15);
+    background: var(--cyan-ghost);
+    padding: 1rem;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 560px;
+  }
+  .merged-box strong {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--bright);
+    margin-bottom: 0.5rem;
+  }
+  .result-box {
+    border: 1px solid rgba(255,45,59,0.2);
+    background: rgba(255,45,59,0.03);
+    padding: 0.7rem;
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+    font-size: 0.9rem;
+  }
+  .result-box .ok { color: var(--green); font-weight: 700; }
+
+  /* === TABLE === */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8rem 0;
+    font-size: 0.88rem;
+  }
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid var(--rule);
+    background: none;
+  }
+  td {
+    padding: 0.6rem 0.7rem;
+    border-bottom: 1px solid rgba(26,34,51,0.6);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--cyan);
+    opacity: 0.8;
+  }
+
+  /* === TIMELINE === */
+  .tl {
+    position: relative;
+    margin: 1.2rem 0 1.2rem 1rem;
+    padding-left: 1.8rem;
+  }
+  .tl::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 1px;
+    background: linear-gradient(180deg, var(--cyan) 0%, var(--rule) 40%, var(--accent) 100%);
+    opacity: 0.35;
+  }
+  .tl-item {
+    position: relative;
+    padding: 0.4rem 0 1.3rem;
+  }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-pip {
+    position: absolute;
+    left: -1.95rem;
+    top: 0.55rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1.5px solid var(--rule);
+    background: var(--bg);
+  }
+  .tl-item.hot .tl-pip { border-color: var(--cyan); box-shadow: 0 0 6px rgba(0,229,255,0.4); }
+  .tl-item.end .tl-pip { border-color: var(--accent); box-shadow: 0 0 6px rgba(255,45,59,0.4); background: rgba(255,45,59,0.15); }
+  .tl-head {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--bright);
+    margin-bottom: 0.15rem;
+  }
+  .tl-n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--dim);
+    margin-right: 0.3rem;
+  }
+  .tl-body { font-size: 0.88rem; }
+  .tl-muted { color: var(--dim); font-size: 0.84rem; }
+
+  /* === EXAMPLES === */
+  .ex-stack { display: grid; gap: 0.5rem; margin: 1rem 0; }
+  .ex {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 1rem 1.2rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.6rem 1.5rem;
+    align-items: start;
+  }
+  .ex-body { grid-column: 1; }
+  .ex-reward-area {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    text-align: right;
+    align-self: center;
+    min-width: 100px;
+  }
+  .ex-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--bright);
+    margin-bottom: 0.35rem;
+  }
+  .ex-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin: 0.2rem 0;
+    flex-wrap: wrap;
+  }
+  .ex-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dim);
+    min-width: 48px;
+  }
+  .ex-note {
+    grid-column: 1 / -1;
+    font-size: 0.82rem;
+    color: var(--dim);
+    font-style: italic;
+    border-top: 1px solid var(--rule);
+    padding-top: 0.4rem;
+    margin-top: 0.2rem;
+  }
+  .rw {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .rw-plus { color: var(--green); }
+  .rw-minus { color: var(--accent); }
+  .rw-spec { color: var(--amber); }
+
+  /* === TIPS === */
+  .tips { list-style: none; margin: 0.6rem 0; }
+  .tips li {
+    padding: 0.55rem 0 0.55rem 1.4rem;
+    position: relative;
+    border-bottom: 1px solid rgba(26,34,51,0.5);
+    font-size: 0.9rem;
+  }
+  .tips li:last-child { border-bottom: none; }
+  .tips li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    width: 6px;
+    height: 1px;
+    background: var(--cyan);
+    opacity: 0.4;
+  }
+
+  /* === FOOTER === */
+  .footer {
+    margin-top: 4rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--dim);
+    opacity: 0.35;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">borderline // system documentation</div>
+  <h1>Inspection Rules<br>&amp; <em>Contraband</em></h1>
+  <p class="hero-sub">Система наград за проверку NPC, включая предметы в багаже</p>
+  <div class="hero-line"></div>
+</div>
+
+<!-- CONCEPT -->
+<div class="section">
+  <div class="section-tag">Концепция</div>
+  <p>Когда игрок заканчивает проверку NPC (допрос, сканирование, решение), система оценивает
+  <strong>Inspection Rules</strong> &mdash; набор правил, заданных дизайнером. Каждое сработавшее правило
+  даёт награду.</p>
+  <div class="callout callout-red">
+    <strong>Одно правило</strong> = условие на тегах + награда.
+    Все совпавшие правила срабатывают аддитивно.
+  </div>
+</div>
+
+<!-- TWO TYPES -->
+<div class="section">
+  <div class="section-tag">Два типа правил</div>
+  <div class="type-duo">
+    <div class="type-card">
+      <div class="type-card-num">1</div>
+      <h3>Обычное правило</h3>
+      <p style="font-size:0.88rem;color:var(--dim)">Без Item.* тегов в условии</p>
+      <p style="font-size:0.88rem">Проверяется <strong>один раз</strong> по clue-тегам NPC.</p>
+      <span class="t t-clue">Clue.Decision.Arrest</span> &rarr; +100 CR
+    </div>
+    <div class="type-card">
+      <div class="type-card-num">2</div>
+      <h3>Per-item правило</h3>
+      <p style="font-size:0.88rem;color:var(--dim)">Есть Item.* теги в условии</p>
+      <p style="font-size:0.88rem">Проверяется <strong>для каждого предмета</strong>. 3 совпадения = награда &times;3.</p>
+      <span class="t t-clue">Clue.Decision.Arrest</span>
+      <span class="t t-item">Item.Type.Pills</span>
+      <span class="t t-state">Item.State.Detected</span>
+    </div>
+  </div>
+  <p>Система <strong>автоматически</strong> определяет тип: если в условии есть хотя бы один
+  тег <code>Item.*</code> &mdash; правило per-item.</p>
+</div>
+
+<!-- TAG ASSEMBLY -->
+<div class="section">
+  <div class="section-tag">Сборка тегов</div>
+  <p>Для каждого предмета система объединяет теги из <strong>трёх источников</strong>
+  и проверяет условие правила.</p>
+
+  <div class="diagram">
+    <span class="diagram-label">tag merge schema</span>
+    <div class="src-row">
+      <div class="src-box">
+        <div class="src-box-head">Clue-теги NPC</div>
+        <span class="t t-clue">Clue.Decision.Arrest</span><br>
+        <span class="t t-clue">Clue.BodyScanned</span>
+      </div>
+      <span class="joiner">+</span>
+      <div class="src-box">
+        <div class="src-box-head">Теги предмета</div>
+        <span class="t t-item">Item.Type.Pills</span><br>
+        <span class="t t-item">Item.Category.Drugs</span>
+      </div>
+      <span class="joiner">+</span>
+      <div class="src-box">
+        <div class="src-box-head">Синтетические</div>
+        <span class="t t-state">Item.State.Contraband</span><br>
+        <span class="t t-state">Item.State.Detected</span><br>
+        <span class="t t-state">Item.State.Confiscated</span>
+      </div>
+    </div>
+    <div class="d-arrow">&darr;</div>
+    <div class="merged-box">
+      <strong>Merged Container</strong>
+      <span class="t t-clue">Clue.Decision.Arrest</span>
+      <span class="t t-clue">Clue.BodyScanned</span>
+      <span class="t t-item">Item.Type.Pills</span>
+      <span class="t t-item">Item.Category.Drugs</span>
+      <span class="t t-state">Item.State.Contraband</span>
+      <span class="t t-state">Item.State.Detected</span>
+      <span class="t t-state">Item.State.Confiscated</span>
+    </div>
+    <div class="d-arrow">&darr;</div>
+    <div class="result-box">
+      RequirementsMet( container ) &rarr; <span class="ok">Match</span> &rarr; Reward
+    </div>
+  </div>
+</div>
+
+<!-- SYNTHETIC TAGS -->
+<div class="section">
+  <div class="section-tag">Синтетические теги</div>
+  <p>Вычисляются автоматически при финализации. <strong>Не ставятся вручную.</strong></p>
+
+  <table>
+    <tr>
+      <th style="width:30%">Тег</th>
+      <th style="width:30%">Условие</th>
+      <th>Источник</th>
+    </tr>
+    <tr>
+      <td><span class="t t-bad">Item.State.Contraband</span></td>
+      <td>Предмет &mdash; контрабанда <strong>по правилам текущего дня</strong></td>
+      <td>Теги предмета &cap; active contraband tags</td>
+    </tr>
+    <tr>
+      <td><span class="t t-state">Item.State.Detected</span></td>
+      <td>Обнаружен рентген-сканером</td>
+      <td>Запись при успешном сканировании</td>
+    </tr>
+    <tr>
+      <td><span class="t t-state">Item.State.Confiscated</span></td>
+      <td>Игрок забрал из багажа</td>
+      <td>Сравнение: было vs осталось</td>
+    </tr>
+    <tr>
+      <td><span class="t t-state">Item.State.Kept</span></td>
+      <td>Остался в багаже, ушёл с NPC</td>
+      <td>Предмет в багаже при уходе</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-amber">
+    <strong>Контрабанда зависит от дня.</strong>
+    Один предмет может быть контрабандой сегодня и легальным завтра.
+    <span class="t t-bad">Item.State.Contraband</span> вычисляется в момент проверки.
+    Не путайте с <span class="t t-item">Item.Type.Contraband</span> &mdash;
+    это статический тег &laquo;всегда контрабанда&raquo;.
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="section">
+  <div class="section-tag">Порядок событий</div>
+
+  <div class="tl">
+    <div class="tl-item hot">
+      <div class="tl-pip"></div>
+      <div class="tl-head"><span class="tl-n">01</span>Взаимодействие с NPC</div>
+      <div class="tl-body">
+        Диалог &rarr; clue-теги &nbsp;/&nbsp;
+        Сканер &rarr; detected &nbsp;/&nbsp;
+        Документы &rarr; clue-теги
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-pip"></div>
+      <div class="tl-head"><span class="tl-n">02</span>Решение</div>
+      <div class="tl-body">
+        Игрок нажимает Permit / Refuse / Arrest<br>
+        <span class="tl-muted">Выучивается <span class="t t-clue">Clue.Decision.*</span> &mdash; награды ещё не выдаются</span>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-pip"></div>
+      <div class="tl-head"><span class="tl-n">03</span>Свободное время</div>
+      <div class="tl-body tl-muted">Предметы на столе &mdash; можно брать и класть обратно</div>
+    </div>
+    <div class="tl-item hot">
+      <div class="tl-pip"></div>
+      <div class="tl-head"><span class="tl-n">04</span>NPC уходит</div>
+      <div class="tl-body">Snapshot: Kept vs Confiscated</div>
+    </div>
+    <div class="tl-item end">
+      <div class="tl-pip"></div>
+      <div class="tl-head"><span class="tl-n">05</span>Finalize Inspection</div>
+      <div class="tl-body">Сборка тегов &rarr; проверка правил &rarr; <strong>выдача наград</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXAMPLES -->
+<div class="section">
+  <div class="section-tag">Примеры</div>
+
+  <div class="ex-stack">
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Базовая награда за арест</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Decision.Arrest</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+100 CR</span></div>
+      <div class="ex-note">Без Item.* &rarr; один раз.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Бонус за найденную контрабандную таблетку</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Decision.Arrest</span>
+          <span class="t t-item">Item.Type.Pills</span>
+          <span class="t t-state">Item.State.Contraband</span>
+          <span class="t t-state">Item.State.Detected</span>
+          <span class="t t-state">Item.State.Confiscated</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+50 CR</span><br><small style="color:var(--dim)">per item</small></div>
+      <div class="ex-note">2 таблетки совпали &rarr; +100 CR.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Контрабанда ушла необнаруженной</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Decision.Permit</span>
+          <span class="t t-bad">Item.State.Contraband</span>
+          <span class="t t-state">Item.State.Kept</span>
+        </div>
+        <div class="ex-line">
+          <span class="ex-lbl">ignore</span>
+          <span class="t t-state">Item.State.Detected</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-minus">&minus;30 CR</span><br><small style="color:var(--dim)">per item</small></div>
+      <div class="ex-note">Игрок не нашёл контрабанду, штраф за каждый предмет.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Коррупция: изъял контрабанду, отпустил NPC</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Decision.Permit</span>
+          <span class="t t-bad">Item.State.Contraband</span>
+          <span class="t t-state">Item.State.Confiscated</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-spec">special</span></div>
+      <div class="ex-note">Нашёл, забрал, но NPC отпустил &mdash; присвоение.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Воровство: изъял легальный предмет</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-state">Item.State.Confiscated</span>
+        </div>
+        <div class="ex-line">
+          <span class="ex-lbl">ignore</span>
+          <span class="t t-bad">Item.State.Contraband</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-minus">penalty</span></div>
+      <div class="ex-note">Предмет не контрабанда, но игрок его забрал.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TIPS -->
+<div class="section">
+  <div class="section-tag">Подсказки</div>
+  <ul class="tips">
+    <li>Без <code>Item.*</code> тегов в условии &mdash; правило срабатывает один раз, только по clue-тегам NPC.</li>
+    <li>С <code>Item.*</code> тегами &mdash; правило проверяется для каждого предмета. Укажите
+    <span class="t t-state">Item.State.Confiscated</span> или <span class="t t-state">Item.State.Kept</span>,
+    чтобы различать изъятые и оставленные предметы.</li>
+    <li><span class="t t-bad">Item.State.Contraband</span> зависит от дня.
+    <span class="t t-item">Item.Type.Contraband</span> &mdash;
+    статический тег &laquo;всегда контрабанда&raquo;. Это разные вещи.</li>
+    <li><code>Ignore</code> = &laquo;если тег есть &mdash; правило НЕ срабатывает&raquo;.
+    Используйте для исключений.</li>
+  </ul>
+</div>
+
+<div class="footer">
+  <span>borderline</span>
+  <span>inspection rules</span>
+  <span>internal docs</span>
+</div>
+
+</div>
+</body>
+</html>
