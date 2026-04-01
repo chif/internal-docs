@@ -507,7 +507,7 @@
       <h3>One-shot правило</h3>
       <p style="font-size:0.88rem;color:var(--dim)">Без Item.*/Bag.*/Tattoo.* в условии</p>
       <p style="font-size:0.88rem">Проверяется <strong>один раз</strong> по clue-тегам NPC.</p>
-      <span class="t t-clue">Clue.Decision.Quality.Best</span> &rarr; +300 CR
+      <span class="t t-clue">Clue.Derived.Decision.Best</span> &rarr; +300 CR
     </div>
     <div class="type-card">
       <div class="type-card-num">2</div>
@@ -546,26 +546,26 @@
         <span class="t t-clue">Clue.Action.Docs.Scanned</span>
         <span class="t t-clue">Clue.Action.Face.Scanned</span>
         <span class="t t-clue">Clue.Action.Body.Scanned</span>
-        <span class="t t-clue">Clue.Action.Luggage.Opened</span>
+        <span class="t t-clue">Clue.Action.Cargo.Opened</span>
       </td>
       <td>Учатся при действиях игрока (LearnClue).</td>
     </tr>
     <tr>
       <td><strong>Assessment</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Assessment.*</span></td>
       <td>
-        <span class="t t-clue">Clue.Assessment.Documents.Violation</span>
-        <span class="t t-clue">Clue.Assessment.Photo.Violation</span>
-        <span class="t t-clue">Clue.Assessment.HealthTattoo.Violation</span>
+        <span class="t t-clue">Clue.Assessment.Docs.Violation</span>
+        <span class="t t-clue">Clue.Assessment.Face.Violation</span>
+        <span class="t t-clue">Clue.Assessment.Body.Violation</span>
         <span class="t t-clue">Clue.Assessment.Cargo.Violation</span>
       </td>
       <td>Из PDA Summary &mdash; оценка игрока по 4 полям.</td>
     </tr>
     <tr>
-      <td><strong>Finding</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Finding.*</span></td>
+      <td><strong>Derived</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Derived.*</span></td>
       <td>
-        <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
-        <span class="t t-clue">Clue.Finding.Cargo.AllContrabandFound</span>
-        <span class="t t-clue">Clue.Finding.Cargo.ViolationDetected</span>
+        <span class="t t-clue">Clue.Derived.Cargo.ContrabandDetected</span>
+        <span class="t t-clue">Clue.Derived.Cargo.AllContrabandFound</span>
+        <span class="t t-clue">Clue.Derived.Cargo.ViolationDetected</span>
       </td>
       <td>Вычисляются при FinalizeInspection из состояния предметов.</td>
     </tr>
@@ -575,9 +575,9 @@
         <span class="t t-clue">Clue.Decision.Action.Permit</span>
         <span class="t t-clue">Clue.Decision.Action.Refuse</span>
         <span class="t t-clue">Clue.Decision.Action.Arrest</span>
-        <span class="t t-clue">Clue.Decision.Quality.Normal</span>
-        <span class="t t-clue">Clue.Decision.Quality.Best</span>
-        <span class="t t-clue">Clue.Decision.Quality.Worst</span>
+        <span class="t t-clue">Clue.Derived.Decision.Normal</span>
+        <span class="t t-clue">Clue.Derived.Decision.Best</span>
+        <span class="t t-clue">Clue.Derived.Decision.Worst</span>
       </td>
       <td>Action &mdash; при решении. Quality &mdash; вычисляется из Truth + Action.</td>
     </tr>
@@ -589,7 +589,7 @@
     <tr>
       <td><strong>Item</strong></td>
       <td>
-        <span class="t t-state">Item.State.Violation</span>
+        <span class="t t-state">Item.State.Prohibited</span>
         <span class="t t-state">Item.State.Detected</span>
         <span class="t t-state">Item.State.Confiscated</span>
         <span class="t t-state">Item.State.Kept</span><br>
@@ -626,7 +626,7 @@
         <div class="src-box-head">Clue-теги NPC</div>
         <span class="t t-clue">Clue.Decision.Action.Arrest</span><br>
         <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span><br>
-        <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+        <span class="t t-clue">Clue.Derived.Cargo.ContrabandDetected</span>
       </div>
       <span class="joiner">+</span>
       <div class="src-box">
@@ -641,7 +641,7 @@
       <strong>Merged Container</strong>
       <span class="t t-clue">Clue.Decision.Action.Arrest</span>
       <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span>
-      <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+      <span class="t t-clue">Clue.Derived.Cargo.ContrabandDetected</span>
       <span class="t t-item">Item.Type.Contraband</span>
       <span class="t t-state">Item.State.Detected</span>
       <span class="t t-state">Item.State.Confiscated</span>
@@ -687,7 +687,7 @@
       <div class="tl-pip"></div>
       <div class="tl-head"><span class="tl-n">05</span>Finalize Inspection</div>
       <div class="tl-body">
-        Inject Truth tags &rarr; derive Finding + Decision Quality &rarr;
+        Derive Cargo + Decision tags &rarr;
         merge Global + Daily + Per-NPC rules &rarr;
         build per-entity containers &rarr; evaluate &rarr; <strong>grant rewards</strong>
       </div>
@@ -730,7 +730,7 @@
         <div class="ex-title">Per item: обнаружил violation (нарушение дня)</div>
         <div class="ex-line">
           <span class="ex-lbl">require</span>
-          <span class="t t-state">Item.State.Violation</span>
+          <span class="t t-state">Item.State.Prohibited</span>
           <span class="t t-state">Item.State.Detected</span>
         </div>
         <div class="ex-line">
@@ -751,11 +751,11 @@
         </div>
         <div class="ex-line">
           <span class="ex-lbl">ignore</span>
-          <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+          <span class="t t-clue">Clue.Derived.Cargo.ContrabandDetected</span>
         </div>
       </div>
       <div class="ex-reward-area"><span class="rw rw-minus">&minus;75 CR</span></div>
-      <div class="ex-note">One-shot. Truth = контрабанда была. Finding отсутствует = не нашёл.</div>
+      <div class="ex-note">One-shot. Truth = контрабанда была. Derived.ContrabandDetected отсутствует = не нашёл.</div>
     </div>
 
     <div class="ex">
@@ -764,7 +764,7 @@
         <div class="ex-line">
           <span class="ex-lbl">require</span>
           <span class="t t-clue">Clue.Truth.Docs.HasViolation</span>
-          <span class="t t-clue">Clue.Assessment.Documents.Violation</span>
+          <span class="t t-clue">Clue.Assessment.Docs.Violation</span>
         </div>
       </div>
       <div class="ex-reward-area"><span class="rw rw-plus">+100 CR</span></div>
@@ -780,7 +780,7 @@
         </div>
         <div class="ex-line">
           <span class="ex-lbl">ignore</span>
-          <span class="t t-clue">Clue.Assessment.Documents.Violation</span>
+          <span class="t t-clue">Clue.Assessment.Docs.Violation</span>
         </div>
       </div>
       <div class="ex-reward-area"><span class="rw rw-minus">&minus;70 CR</span></div>
@@ -804,7 +804,7 @@
         <div class="ex-title">Decision: лучшее решение</div>
         <div class="ex-line">
           <span class="ex-lbl">require</span>
-          <span class="t t-clue">Clue.Decision.Quality.Best</span>
+          <span class="t t-clue">Clue.Derived.Decision.Best</span>
         </div>
       </div>
       <div class="ex-reward-area"><span class="rw rw-plus">+300 CR</span></div>
@@ -820,7 +820,7 @@
         </div>
         <div class="ex-line">
           <span class="ex-lbl">ignore</span>
-          <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+          <span class="t t-clue">Clue.Derived.Cargo.ContrabandDetected</span>
           <span class="t t-clue">Clue.Truth.Exempt.Contraband</span>
         </div>
       </div>
@@ -837,12 +837,12 @@
     <li>Правила из всех трёх слоёв (Global, Daily, Per-NPC) складываются аддитивно. Порядок не влияет на результат.</li>
     <li>Правило без <code>Item.*</code> / <code>Bag.*</code> / <code>Tattoo.*</code> тегов &mdash; one-shot, проверяет только clue-теги.</li>
     <li>Правило с entity-тегами &mdash; проверяется для каждой сущности (предмет, сумка, тату). Сколько совпало &mdash; столько наград.</li>
-    <li><span class="t t-state">Item.State.Violation</span> = нелегален сегодня (daily rules).
+    <li><span class="t t-state">Item.State.Prohibited</span> = нелегален сегодня (daily rules).
     <span class="t t-item">Item.Type.Contraband</span> = нелегален всегда. Разные вещи, разные награды.</li>
     <li><span class="t t-clue">Clue.Truth.*</span> &mdash; факты о NPC, задаются дизайнером в TruthTags на NPC definition. Инжектятся в clue-контейнер при evaluation.</li>
-    <li><span class="t t-clue">Clue.Finding.*</span> &mdash; вычисляются автоматически из состояния предметов. Используются для aggregate условий (&laquo;контрабанда была, ничего не нашёл&raquo;).</li>
+    <li><span class="t t-clue">Clue.Derived.*</span> &mdash; вычисляются автоматически из состояния предметов. Используются для aggregate условий (&laquo;контрабанда была, ничего не нашёл&raquo;).</li>
     <li><code>Ignore</code> = &laquo;если тег есть &mdash; правило НЕ срабатывает&raquo;. Используйте для исключений и Exempt.</li>
-    <li><span class="t t-clue">Clue.Decision.Quality.*</span> вычисляется из Truth.Decision.*.* &mdash; дизайнер задаёт какое решение лучшее/худшее для каждого NPC.</li>
+    <li><span class="t t-clue">Clue.Derived.Decision.*</span> вычисляется из Truth.Decision.*.* &mdash; дизайнер задаёт какое решение лучшее/худшее для каждого NPC.</li>
   </ul>
 </div>
 
