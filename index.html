@@ -457,72 +457,181 @@
 <!-- HERO -->
 <div class="hero">
   <div class="hero-eyebrow">system documentation</div>
-  <h1>Inspection Rules<br>&amp; <em>Contraband</em></h1>
-  <p class="hero-sub">Система наград за проверку NPC, включая предметы в багаже</p>
+  <h1>Inspection Rules<br>&amp; <em>Rewards</em></h1>
+  <p class="hero-sub">Система наград и штрафов за проверку NPC: багаж, документы, лицо, татуировки, решение</p>
   <div class="hero-line"></div>
 </div>
 
 <!-- CONCEPT -->
 <div class="section">
   <div class="section-tag">Концепция</div>
-  <p>Когда игрок заканчивает проверку NPC (допрос, сканирование, решение), система оценивает
-  <strong>Inspection Rules</strong> &mdash; набор правил, заданных дизайнером. Каждое сработавшее правило
-  даёт награду.</p>
+  <p>После проверки NPC система оценивает <strong>Inspection Rules</strong> &mdash; набор правил из трёх слоёв.
+  Каждое сработавшее правило даёт награду или штраф. Все правила аддитивны.</p>
   <div class="callout callout-red">
-    <strong>Одно правило</strong> = условие на тегах + награда.
-    Все совпавшие правила срабатывают аддитивно.
+    <strong>Одно правило</strong> = условие (<code>FGameplayTagRequirements</code>: Require + Ignore) + награда.
   </div>
 </div>
 
-<!-- TWO TYPES -->
+<!-- THREE LAYERS -->
+<div class="section">
+  <div class="section-tag">Три слоя правил</div>
+  <p>Правила собираются из трёх источников и конкатенируются в один массив.</p>
+  <table>
+    <tr><th>Слой</th><th>Где задаётся</th><th>Пример</th></tr>
+    <tr>
+      <td><strong>Global</strong></td>
+      <td>Campaign Definition</td>
+      <td>&minus;25 за каждую неоткрытую сумку (всегда, для всех NPC)</td>
+    </tr>
+    <tr>
+      <td><strong>Daily</strong></td>
+      <td>Day Definition (DayData)</td>
+      <td>Сегодня повышенный штраф за контрабанду</td>
+    </tr>
+    <tr>
+      <td><strong>Per-NPC</strong></td>
+      <td>NPC Spawn Preset (FNPCDefinition)</td>
+      <td>+100 за верную оценку документов этого конкретного NPC</td>
+    </tr>
+  </table>
+  <p>Все три слоя аддитивны. Нет механизма override &mdash; исключения делаются через
+  <span class="t t-clue">Clue.Truth.Exempt.*</span> теги (см. ниже).</p>
+</div>
+
+<!-- TWO RULE TYPES -->
 <div class="section">
   <div class="section-tag">Два типа правил</div>
   <div class="type-duo">
     <div class="type-card">
       <div class="type-card-num">1</div>
-      <h3>Обычное правило</h3>
-      <p style="font-size:0.88rem;color:var(--dim)">Без Item.* тегов в условии</p>
+      <h3>One-shot правило</h3>
+      <p style="font-size:0.88rem;color:var(--dim)">Без Item.*/Bag.*/Tattoo.* в условии</p>
       <p style="font-size:0.88rem">Проверяется <strong>один раз</strong> по clue-тегам NPC.</p>
-      <span class="t t-clue">Clue.Decision.Arrest</span> &rarr; +100 CR
+      <span class="t t-clue">Clue.Decision.Quality.Best</span> &rarr; +300 CR
     </div>
     <div class="type-card">
       <div class="type-card-num">2</div>
-      <h3>Per-item правило</h3>
-      <p style="font-size:0.88rem;color:var(--dim)">Есть Item.* теги в условии</p>
-      <p style="font-size:0.88rem">Проверяется <strong>для каждого предмета</strong>. 3 совпадения = награда &times;3.</p>
-      <span class="t t-clue">Clue.Decision.Arrest</span>
-      <span class="t t-item">Item.Type.Pills</span>
-      <span class="t t-state">Item.State.Detected</span>
+      <h3>Per-entity правило</h3>
+      <p style="font-size:0.88rem;color:var(--dim)">Есть Item.* / Bag.* / Tattoo.* в условии</p>
+      <p style="font-size:0.88rem">Проверяется <strong>для каждой сущности</strong>. 3 совпадения = награда &times;3.</p>
+      <span class="t t-item">Item.Type.Contraband</span>
+      <span class="t t-state">Item.State.Detected</span> &rarr; +150 CR
     </div>
   </div>
-  <p>Система <strong>автоматически</strong> определяет тип: если в условии есть хотя бы один
-  тег <code>Item.*</code> &mdash; правило per-item.</p>
+  <p>Система определяет тип автоматически: если условие содержит тег из <code>Item.*</code>,
+  <code>Bag.*</code> или <code>Tattoo.*</code> &mdash; правило per-entity.</p>
+</div>
+
+<!-- TAG HIERARCHY -->
+<div class="section">
+  <div class="section-tag">Иерархия тегов</div>
+
+  <h3>Clue-теги (в контейнере NPC)</h3>
+  <table>
+    <tr><th>Категория</th><th>Примеры</th><th>Откуда берутся</th></tr>
+    <tr>
+      <td><strong>Truth</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Truth.*</span></td>
+      <td>
+        <span class="t t-clue">Clue.Truth.Docs.HasViolation</span>
+        <span class="t t-clue">Clue.Truth.Face.HasMismatch</span>
+        <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span>
+        <span class="t t-clue">Clue.Truth.Decision.Best.Arrest</span>
+        <span class="t t-clue">Clue.Truth.Exempt.Contraband</span>
+      </td>
+      <td>Из TruthTags на NPC definition. Факты о NPC &mdash; ground truth.</td>
+    </tr>
+    <tr>
+      <td><strong>Action</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Action.*</span></td>
+      <td>
+        <span class="t t-clue">Clue.Action.Docs.Scanned</span>
+        <span class="t t-clue">Clue.Action.Face.Scanned</span>
+        <span class="t t-clue">Clue.Action.Body.Scanned</span>
+        <span class="t t-clue">Clue.Action.Luggage.Opened</span>
+      </td>
+      <td>Учатся при действиях игрока (LearnClue).</td>
+    </tr>
+    <tr>
+      <td><strong>Assessment</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Assessment.*</span></td>
+      <td>
+        <span class="t t-clue">Clue.Assessment.Documents.Violation</span>
+        <span class="t t-clue">Clue.Assessment.Photo.Violation</span>
+        <span class="t t-clue">Clue.Assessment.HealthTattoo.Violation</span>
+        <span class="t t-clue">Clue.Assessment.Cargo.Violation</span>
+      </td>
+      <td>Из PDA Summary &mdash; оценка игрока по 4 полям.</td>
+    </tr>
+    <tr>
+      <td><strong>Finding</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Finding.*</span></td>
+      <td>
+        <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+        <span class="t t-clue">Clue.Finding.Cargo.AllContrabandFound</span>
+        <span class="t t-clue">Clue.Finding.Cargo.ViolationDetected</span>
+      </td>
+      <td>Вычисляются при FinalizeInspection из состояния предметов.</td>
+    </tr>
+    <tr>
+      <td><strong>Decision</strong><br><span class="t t-clue" style="font-size:0.68rem">Clue.Decision.*</span></td>
+      <td>
+        <span class="t t-clue">Clue.Decision.Action.Permit</span>
+        <span class="t t-clue">Clue.Decision.Action.Refuse</span>
+        <span class="t t-clue">Clue.Decision.Action.Arrest</span>
+        <span class="t t-clue">Clue.Decision.Quality.Normal</span>
+        <span class="t t-clue">Clue.Decision.Quality.Best</span>
+        <span class="t t-clue">Clue.Decision.Quality.Worst</span>
+      </td>
+      <td>Action &mdash; при решении. Quality &mdash; вычисляется из Truth + Action.</td>
+    </tr>
+  </table>
+
+  <h3>Per-entity теги (в контейнере каждой сущности)</h3>
+  <table>
+    <tr><th>Entity</th><th>Теги</th><th>Описание</th></tr>
+    <tr>
+      <td><strong>Item</strong></td>
+      <td>
+        <span class="t t-state">Item.State.Violation</span>
+        <span class="t t-state">Item.State.Detected</span>
+        <span class="t t-state">Item.State.Confiscated</span>
+        <span class="t t-state">Item.State.Kept</span><br>
+        + собственные теги предмета: <span class="t t-item">Item.Type.Contraband</span>, <span class="t t-item">Item.Type.Pills</span>, &hellip;
+      </td>
+      <td>Violation = нелегален сегодня (daily rules).<br>
+      Item.Type.Contraband = всегда нелегален. Это разные вещи!</td>
+    </tr>
+    <tr>
+      <td><strong>Bag</strong></td>
+      <td><span class="t t-state">Bag.State.Opened</span></td>
+      <td>Игрок открыл эту сумку. Если нет тега &mdash; не открыта.</td>
+    </tr>
+    <tr>
+      <td><strong>Tattoo</strong></td>
+      <td>
+        <span class="t t-state">Tattoo.State.Scanned</span><br>
+        + identity тег: <span class="t t-item">Xray.Implant.Tattoo.OPA</span>
+      </td>
+      <td>Игрок просканировал татуировку.</td>
+    </tr>
+  </table>
 </div>
 
 <!-- TAG ASSEMBLY -->
 <div class="section">
-  <div class="section-tag">Сборка тегов</div>
-  <p>Для каждого предмета система объединяет теги из <strong>трёх источников</strong>
-  и проверяет условие правила.</p>
+  <div class="section-tag">Сборка тегов (per-entity)</div>
+  <p>Для per-entity правил система объединяет clue-теги NPC с тегами конкретной сущности.</p>
 
   <div class="diagram">
-    <span class="diagram-label">tag merge schema</span>
+    <span class="diagram-label">tag merge</span>
     <div class="src-row">
       <div class="src-box">
         <div class="src-box-head">Clue-теги NPC</div>
-        <span class="t t-clue">Clue.Decision.Arrest</span><br>
-        <span class="t t-clue">Clue.BodyScanned</span>
+        <span class="t t-clue">Clue.Decision.Action.Arrest</span><br>
+        <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span><br>
+        <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
       </div>
       <span class="joiner">+</span>
       <div class="src-box">
-        <div class="src-box-head">Теги предмета</div>
-        <span class="t t-item">Item.Type.Pills</span><br>
-        <span class="t t-item">Item.Category.Drugs</span>
-      </div>
-      <span class="joiner">+</span>
-      <div class="src-box">
-        <div class="src-box-head">Синтетические</div>
-        <span class="t t-state">Item.State.Contraband</span><br>
+        <div class="src-box-head">Теги сущности</div>
+        <span class="t t-item">Item.Type.Contraband</span><br>
         <span class="t t-state">Item.State.Detected</span><br>
         <span class="t t-state">Item.State.Confiscated</span>
       </div>
@@ -530,11 +639,10 @@
     <div class="d-arrow">&darr;</div>
     <div class="merged-box">
       <strong>Merged Container</strong>
-      <span class="t t-clue">Clue.Decision.Arrest</span>
-      <span class="t t-clue">Clue.BodyScanned</span>
-      <span class="t t-item">Item.Type.Pills</span>
-      <span class="t t-item">Item.Category.Drugs</span>
-      <span class="t t-state">Item.State.Contraband</span>
+      <span class="t t-clue">Clue.Decision.Action.Arrest</span>
+      <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span>
+      <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+      <span class="t t-item">Item.Type.Contraband</span>
       <span class="t t-state">Item.State.Detected</span>
       <span class="t t-state">Item.State.Confiscated</span>
     </div>
@@ -542,48 +650,6 @@
     <div class="result-box">
       RequirementsMet( container ) &rarr; <span class="ok">Match</span> &rarr; Reward
     </div>
-  </div>
-</div>
-
-<!-- SYNTHETIC TAGS -->
-<div class="section">
-  <div class="section-tag">Синтетические теги</div>
-  <p>Вычисляются автоматически при финализации. <strong>Не ставятся вручную.</strong></p>
-
-  <table>
-    <tr>
-      <th style="width:30%">Тег</th>
-      <th style="width:30%">Условие</th>
-      <th>Источник</th>
-    </tr>
-    <tr>
-      <td><span class="t t-bad">Item.State.Contraband</span></td>
-      <td>Предмет &mdash; контрабанда <strong>по правилам текущего дня</strong></td>
-      <td>Теги предмета &cap; активные contraband-теги дня</td>
-    </tr>
-    <tr>
-      <td><span class="t t-state">Item.State.Detected</span></td>
-      <td>Обнаружен рентген-сканером</td>
-      <td>Запись при успешном сканировании</td>
-    </tr>
-    <tr>
-      <td><span class="t t-state">Item.State.Confiscated</span></td>
-      <td>Игрок забрал из багажа</td>
-      <td>Сравнение: было vs осталось</td>
-    </tr>
-    <tr>
-      <td><span class="t t-state">Item.State.Kept</span></td>
-      <td>Остался в багаже, ушёл с NPC</td>
-      <td>Предмет в багаже при уходе</td>
-    </tr>
-  </table>
-
-  <div class="callout callout-amber">
-    <strong>Контрабанда зависит от дня.</strong>
-    Один предмет может быть контрабандой сегодня и легальным завтра.
-    <span class="t t-bad">Item.State.Contraband</span> вычисляется в момент проверки.
-    Не путайте с <span class="t t-item">Item.Type.Contraband</span> &mdash;
-    это статический тег &laquo;всегда контрабанда&raquo;.
   </div>
 </div>
 
@@ -596,9 +662,7 @@
       <div class="tl-pip"></div>
       <div class="tl-head"><span class="tl-n">01</span>Взаимодействие с NPC</div>
       <div class="tl-body">
-        Диалог &rarr; clue-теги &nbsp;/&nbsp;
-        Сканер &rarr; detected &nbsp;/&nbsp;
-        Документы &rarr; clue-теги
+        Диалог, сканер, документы &rarr; учатся <span class="t t-clue">Clue.Action.*</span> и <span class="t t-clue">Clue.Assessment.*</span> теги
       </div>
     </div>
     <div class="tl-item">
@@ -606,7 +670,7 @@
       <div class="tl-head"><span class="tl-n">02</span>Решение</div>
       <div class="tl-body">
         Игрок нажимает Permit / Refuse / Arrest<br>
-        <span class="tl-muted">Выучивается <span class="t t-clue">Clue.Decision.*</span> &mdash; награды ещё не выдаются</span>
+        <span class="tl-muted">Учится <span class="t t-clue">Clue.Decision.Action.*</span> &mdash; награды ещё не выдаются</span>
       </div>
     </div>
     <div class="tl-item">
@@ -617,95 +681,151 @@
     <div class="tl-item hot">
       <div class="tl-pip"></div>
       <div class="tl-head"><span class="tl-n">04</span>NPC уходит</div>
-      <div class="tl-body">Snapshot: Kept vs Confiscated</div>
+      <div class="tl-body">Snapshot: per-item Kept vs Confiscated, bIsDetected</div>
     </div>
     <div class="tl-item end">
       <div class="tl-pip"></div>
       <div class="tl-head"><span class="tl-n">05</span>Finalize Inspection</div>
-      <div class="tl-body">Сборка тегов &rarr; проверка правил &rarr; <strong>выдача наград</strong></div>
+      <div class="tl-body">
+        Inject Truth tags &rarr; derive Finding + Decision Quality &rarr;
+        merge Global + Daily + Per-NPC rules &rarr;
+        build per-entity containers &rarr; evaluate &rarr; <strong>grant rewards</strong>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- EXAMPLES -->
 <div class="section">
-  <div class="section-tag">Примеры</div>
+  <div class="section-tag">Примеры правил</div>
 
   <div class="ex-stack">
     <div class="ex">
       <div class="ex-body">
-        <div class="ex-title">Базовая награда за арест</div>
+        <div class="ex-title">Per bag: открыл сумку</div>
         <div class="ex-line">
           <span class="ex-lbl">require</span>
-          <span class="t t-clue">Clue.Decision.Arrest</span>
+          <span class="t t-state">Bag.State.Opened</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+50 CR</span><br><small style="color:var(--dim)">per bag</small></div>
+      <div class="ex-note">Global rule. Per-entity: Bag.* тег &rarr; итерирует сумки.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Per item: обнаружил контрабанду</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-item">Item.Type.Contraband</span>
+          <span class="t t-state">Item.State.Detected</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+150 CR</span><br><small style="color:var(--dim)">per item</small></div>
+      <div class="ex-note">Global rule. Item.Type.Contraband = всегда нелегален.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Per item: обнаружил violation (нарушение дня)</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-state">Item.State.Violation</span>
+          <span class="t t-state">Item.State.Detected</span>
+        </div>
+        <div class="ex-line">
+          <span class="ex-lbl">ignore</span>
+          <span class="t t-item">Item.Type.Contraband</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+100 CR</span><br><small style="color:var(--dim)">per item</small></div>
+      <div class="ex-note">Ignore Contraband &mdash; чтобы не давать двойной бонус.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Aggregate: была контрабанда, но игрок ничего не нашёл</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span>
+        </div>
+        <div class="ex-line">
+          <span class="ex-lbl">ignore</span>
+          <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-minus">&minus;75 CR</span></div>
+      <div class="ex-note">One-shot. Truth = контрабанда была. Finding отсутствует = не нашёл.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Docs: верная оценка документов</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Truth.Docs.HasViolation</span>
+          <span class="t t-clue">Clue.Assessment.Documents.Violation</span>
         </div>
       </div>
       <div class="ex-reward-area"><span class="rw rw-plus">+100 CR</span></div>
-      <div class="ex-note">Без Item.* &rarr; один раз.</div>
+      <div class="ex-note">Per-NPC rule (только на NPC с нарушением). Truth + Assessment совпали.</div>
     </div>
 
     <div class="ex">
       <div class="ex-body">
-        <div class="ex-title">Бонус за найденную контрабандную таблетку</div>
+        <div class="ex-title">Docs: пропустил нарушение</div>
         <div class="ex-line">
           <span class="ex-lbl">require</span>
-          <span class="t t-clue">Clue.Decision.Arrest</span>
-          <span class="t t-item">Item.Type.Pills</span>
-          <span class="t t-state">Item.State.Contraband</span>
-          <span class="t t-state">Item.State.Detected</span>
-          <span class="t t-state">Item.State.Confiscated</span>
-        </div>
-      </div>
-      <div class="ex-reward-area"><span class="rw rw-plus">+50 CR</span><br><small style="color:var(--dim)">per item</small></div>
-      <div class="ex-note">2 таблетки совпали &rarr; +100 CR.</div>
-    </div>
-
-    <div class="ex">
-      <div class="ex-body">
-        <div class="ex-title">Контрабанда ушла необнаруженной</div>
-        <div class="ex-line">
-          <span class="ex-lbl">require</span>
-          <span class="t t-clue">Clue.Decision.Permit</span>
-          <span class="t t-bad">Item.State.Contraband</span>
-          <span class="t t-state">Item.State.Kept</span>
+          <span class="t t-clue">Clue.Truth.Docs.HasViolation</span>
         </div>
         <div class="ex-line">
           <span class="ex-lbl">ignore</span>
-          <span class="t t-state">Item.State.Detected</span>
+          <span class="t t-clue">Clue.Assessment.Documents.Violation</span>
         </div>
       </div>
-      <div class="ex-reward-area"><span class="rw rw-minus">&minus;30 CR</span><br><small style="color:var(--dim)">per item</small></div>
-      <div class="ex-note">Игрок не нашёл контрабанду, штраф за каждый предмет.</div>
+      <div class="ex-reward-area"><span class="rw rw-minus">&minus;70 CR</span></div>
+      <div class="ex-note">Per-NPC rule. Нарушение есть, игрок не пометил.</div>
     </div>
 
     <div class="ex">
       <div class="ex-body">
-        <div class="ex-title">Коррупция: изъял контрабанду, отпустил NPC</div>
+        <div class="ex-title">Per tattoo: просканировал тату</div>
         <div class="ex-line">
           <span class="ex-lbl">require</span>
-          <span class="t t-clue">Clue.Decision.Permit</span>
-          <span class="t t-bad">Item.State.Contraband</span>
-          <span class="t t-state">Item.State.Confiscated</span>
+          <span class="t t-state">Tattoo.State.Scanned</span>
         </div>
       </div>
-      <div class="ex-reward-area"><span class="rw rw-spec">special</span></div>
-      <div class="ex-note">Нашёл, забрал, но NPC отпустил &mdash; присвоение.</div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+25 CR</span><br><small style="color:var(--dim)">per tattoo</small></div>
+      <div class="ex-note">Global rule. Tattoo.* тег &rarr; итерирует татуировки.</div>
     </div>
 
     <div class="ex">
       <div class="ex-body">
-        <div class="ex-title">Воровство: изъял легальный предмет</div>
+        <div class="ex-title">Decision: лучшее решение</div>
         <div class="ex-line">
           <span class="ex-lbl">require</span>
-          <span class="t t-state">Item.State.Confiscated</span>
+          <span class="t t-clue">Clue.Decision.Quality.Best</span>
+        </div>
+      </div>
+      <div class="ex-reward-area"><span class="rw rw-plus">+300 CR</span></div>
+      <div class="ex-note">Global rule. Quality вычисляется из Truth.Decision.Best.* + фактического решения.</div>
+    </div>
+
+    <div class="ex">
+      <div class="ex-body">
+        <div class="ex-title">Exempt: послу разрешена контрабанда</div>
+        <div class="ex-line">
+          <span class="ex-lbl">require</span>
+          <span class="t t-clue">Clue.Truth.Cargo.HasContraband</span>
         </div>
         <div class="ex-line">
           <span class="ex-lbl">ignore</span>
-          <span class="t t-bad">Item.State.Contraband</span>
+          <span class="t t-clue">Clue.Finding.Cargo.ContrabandDetected</span>
+          <span class="t t-clue">Clue.Truth.Exempt.Contraband</span>
         </div>
       </div>
-      <div class="ex-reward-area"><span class="rw rw-minus">penalty</span></div>
-      <div class="ex-note">Предмет не контрабанда, но игрок его забрал.</div>
+      <div class="ex-reward-area"><span class="rw rw-minus">&minus;75 CR</span></div>
+      <div class="ex-note">Штраф за пропуск контрабанды. Если NPC &mdash; посол с Exempt тегом &rarr; правило НЕ сработает.</div>
     </div>
   </div>
 </div>
@@ -714,15 +834,15 @@
 <div class="section">
   <div class="section-tag">Подсказки</div>
   <ul class="tips">
-    <li>Без <code>Item.*</code> тегов в условии &mdash; правило срабатывает один раз, только по clue-тегам NPC.</li>
-    <li>С <code>Item.*</code> тегами &mdash; правило проверяется для каждого предмета. Укажите
-    <span class="t t-state">Item.State.Confiscated</span> или <span class="t t-state">Item.State.Kept</span>,
-    чтобы различать изъятые и оставленные предметы.</li>
-    <li><span class="t t-bad">Item.State.Contraband</span> зависит от дня.
-    <span class="t t-item">Item.Type.Contraband</span> &mdash;
-    статический тег &laquo;всегда контрабанда&raquo;. Это разные вещи.</li>
-    <li><code>Ignore</code> = &laquo;если тег есть &mdash; правило НЕ срабатывает&raquo;.
-    Используйте для исключений.</li>
+    <li>Правила из всех трёх слоёв (Global, Daily, Per-NPC) складываются аддитивно. Порядок не влияет на результат.</li>
+    <li>Правило без <code>Item.*</code> / <code>Bag.*</code> / <code>Tattoo.*</code> тегов &mdash; one-shot, проверяет только clue-теги.</li>
+    <li>Правило с entity-тегами &mdash; проверяется для каждой сущности (предмет, сумка, тату). Сколько совпало &mdash; столько наград.</li>
+    <li><span class="t t-state">Item.State.Violation</span> = нелегален сегодня (daily rules).
+    <span class="t t-item">Item.Type.Contraband</span> = нелегален всегда. Разные вещи, разные награды.</li>
+    <li><span class="t t-clue">Clue.Truth.*</span> &mdash; факты о NPC, задаются дизайнером в TruthTags на NPC definition. Инжектятся в clue-контейнер при evaluation.</li>
+    <li><span class="t t-clue">Clue.Finding.*</span> &mdash; вычисляются автоматически из состояния предметов. Используются для aggregate условий (&laquo;контрабанда была, ничего не нашёл&raquo;).</li>
+    <li><code>Ignore</code> = &laquo;если тег есть &mdash; правило НЕ срабатывает&raquo;. Используйте для исключений и Exempt.</li>
+    <li><span class="t t-clue">Clue.Decision.Quality.*</span> вычисляется из Truth.Decision.*.* &mdash; дизайнер задаёт какое решение лучшее/худшее для каждого NPC.</li>
   </ul>
 </div>
 
