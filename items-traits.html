@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Items · Traits · BorderLine</title>
+<title>Items · Traits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -369,9 +369,9 @@
 
 <div class="topbar">
   <div class="frame row">
-    <span><span class="dot"></span>BORDERLINE · TECH DIVISION</span>
-    <span class="classification">INTERNAL · ARCH NOTE</span>
-    <span>ITM-001 · REV 02</span>
+    <span><span class="dot"></span>TECH NOTE</span>
+    <span class="classification">ARCH · ITEMS COMPOSITION</span>
+    <span>ITM-001 · REV 03</span>
   </div>
 </div>
 
@@ -392,15 +392,16 @@
 
       <p class="big">
         Сейчас Item Data Asset показывает дизайнеру <strong>все возможные свойства предмета сразу</strong> —
-        включая те, что никогда не будут заполнены. У сапог есть поле <code>ContainedItems</code>.
-        У ампулы есть поле <code>LuggagePoints</code>. И так дальше.
+        включая те, что никогда не будут заполнены. У обычного предмета есть поля,
+        относящиеся к контейнерам. У валюты есть поля экипировки. И так дальше.
       </p>
 
       <p class="big">
-        Когда подъедут оружие, scannable, contraband, документы, квест-привязки — добавится
-        <strong>ещё столько же полей</strong>. И большинство из них так же будут пустыми у большинства предметов.
-        Текущая модель упирается в этот рост: добавить винтовку как DA сейчас просто <strong>некуда</strong> —
-        FamilyId, Recoil, Stance не имеют места в существующих полях.
+        Когда подъедут новые capability (weapon, scannable, специальные категории, quest-привязки) —
+        добавится <strong>ещё столько же полей</strong>. И большинство из них так же будут пустыми
+        у большинства предметов. Текущая модель упирается в этот рост: добавить, например, винтовку
+        как DA сейчас просто <strong>некуда</strong> — FamilyId, Recoil, Stance не имеют места
+        в существующих полях.
       </p>
 
       <div class="why-grid">
@@ -417,7 +418,7 @@
         <div class="why-card">
           <div class="num">03</div>
           <h4>Готовность к росту</h4>
-          <p>Новая способность (оружие, scannable, contraband) — новый trait. Добавляем туда, где нужно. Не трогаем то, где не нужно.</p>
+          <p>Новая способность (weapon, scannable, capability X) — новый trait. Добавляем туда, где нужно. Не трогаем то, где не нужно.</p>
         </div>
         <div class="why-card">
           <div class="num">04</div>
@@ -446,42 +447,43 @@
         Справа — как будут.
       </p>
 
-      <!-- ITEM 1: VRHelmet -->
-      <h3 style="margin-top: 28px;">VR-Helmet · багажный предмет</h3>
+      <!-- ITEM 1: Helmet (generic backpack item) -->
+      <h3 style="margin-top: 28px;">Helmet · обычный предмет в инвентаре</h3>
       <p class="muted" style="font-size: 14px;">
-        <code>DA_Item_VRHelmet</code> — представитель самой массовой группы (37 из 43 предметов).
+        <code>DA_Item_Helmet</code> — представитель массовой группы предметов, которые лежат
+        в инвентаре и берутся в руки.
       </p>
 
       <div class="editor-compare">
         <div>
           <div class="editor-mock before">
             <div class="panel-head">
-              <span class="label">Сейчас (master)</span>
+              <span class="label">Сейчас</span>
               <span class="count">14 полей · 8 категорий</span>
             </div>
             <div class="group-head">Item Definition</div>
-              <div class="row"><span>Display Name</span><span class="v set">VR-Helmet</span></div>
-              <div class="row"><span>Description</span><span class="v set">Позволяет отрабатывать…</span></div>
-              <div class="row"><span>Icon</span><span class="v set">T_UI_icon_Item_VRHelmet</span></div>
-              <div class="row"><span>Item Tags</span><span class="v set">Item.Type.VRHelmetPickUp</span></div>
+              <div class="row"><span>Display Name</span><span class="v set">Helmet</span></div>
+              <div class="row"><span>Description</span><span class="v set">(описание...)</span></div>
+              <div class="row"><span>Icon</span><span class="v set">T_UI_icon_Item_Helmet</span></div>
+              <div class="row"><span>Item Tags</span><span class="v set">Item.Type.Headgear</span></div>
               <div class="row"><span>Max Stack Count</span><span class="v">1</span></div>
               <div class="row"><span>Item Type</span><span class="v">Item</span></div>
               <div class="row"><span>Can Store In Inv</span><span class="v">true</span></div>
-            <div class="group-head">Luggage</div>
-              <div class="row"><span>Luggage Points</span><span class="v set">Point.Luggage.Packed.Small</span></div>
+            <div class="group-head">Slot.A</div>
+              <div class="row"><span>Slot.A Points</span><span class="v set">Point.Slot.Small</span></div>
             <div class="group-head">Container</div>
               <div class="row"><span>Container Points</span><span class="v empty">(empty)</span></div>
               <div class="row"><span>Contained Items</span><span class="v empty">[ ]</span></div>
-            <div class="group-head">Cargo</div>
-              <div class="row"><span>Cargo Points</span><span class="v empty">(empty)</span></div>
+            <div class="group-head">Slot.B</div>
+              <div class="row"><span>Slot.B Points</span><span class="v empty">(empty)</span></div>
             <div class="group-head">Pickup</div>
-              <div class="row"><span>Pickup Actor</span><span class="v set">BP_ItemPickUp_VRHelmet_C</span></div>
+              <div class="row"><span>Pickup Actor</span><span class="v set">BP_PickUp_Helmet_C</span></div>
             <div class="group-head">Equipped</div>
-              <div class="row"><span>Equipped Actor</span><span class="v set">BP_ItemEquipped_VRHelmet_C</span></div>
+              <div class="row"><span>Equipped Actor</span><span class="v set">BP_Equipped_Helmet_C</span></div>
               <div class="row"><span>Attach Socket</span><span class="v">weapon_r</span></div>
               <div class="row"><span>Equipped Mesh Attach Socket</span><span class="v set">skt_HandPlacement</span></div>
             <div class="group-head">Abilities</div>
-              <div class="row"><span>Equipped Ability Set</span><span class="v set">AS_ItemEquippedCommon</span></div>
+              <div class="row"><span>Equipped Ability Set</span><span class="v set">AS_ItemCommon</span></div>
             <div class="group-head">Actions</div>
               <div class="row"><span>Item Added Actions</span><span class="v empty">[ ]</span></div>
           </div>
@@ -495,59 +497,59 @@
               <span class="count">3 поля + 1 trait с 4 фрагментами</span>
             </div>
             <div class="group-head">Item Definition</div>
-              <div class="row"><span>Display Name</span><span class="v set">VR-Helmet</span></div>
-              <div class="row"><span>Description</span><span class="v set">Позволяет отрабатывать…</span></div>
-              <div class="row"><span>Icon</span><span class="v set">T_UI_icon_Item_VRHelmet</span></div>
+              <div class="row"><span>Display Name</span><span class="v set">Helmet</span></div>
+              <div class="row"><span>Description</span><span class="v set">(описание...)</span></div>
+              <div class="row"><span>Icon</span><span class="v set">T_UI_icon_Item_Helmet</span></div>
             <div class="group-head">Traits [1]</div>
               <div class="nested">
-                <div class="group-head" style="color: var(--accent-bright);">[0] Trait_LuggageItem</div>
+                <div class="group-head" style="color: var(--accent-bright);">[0] Trait_BackpackItem</div>
                 <div class="nested">
                   <div class="group-head">[0] Equippable</div>
-                    <div class="row"><span>Equipped Actor</span><span class="v set">BP_ItemEquipped_VRHelmet_C</span></div>
+                    <div class="row"><span>Equipped Actor</span><span class="v set">BP_Equipped_Helmet_C</span></div>
                   <div class="group-head">[1] Equip Attach</div>
                     <div class="row"><span>Arms Attach Socket</span><span class="v">weapon_r</span></div>
                     <div class="row"><span>Item Mesh Align Socket</span><span class="v set">skt_HandPlacement</span></div>
                   <div class="group-head">[2] Grants Abilities</div>
-                    <div class="row"><span>Ability Set</span><span class="v set">AS_ItemEquippedCommon</span></div>
+                    <div class="row"><span>Ability Set</span><span class="v set">AS_ItemCommon</span></div>
                   <div class="group-head">[3] Pickup Actor</div>
-                    <div class="row"><span>Pickup Class</span><span class="v set">BP_ItemPickUp_VRHelmet_C</span></div>
+                    <div class="row"><span>Pickup Class</span><span class="v set">BP_PickUp_Helmet_C</span></div>
                 </div>
               </div>
           </div>
-          <div class="compare-caption">4 фрагмента — ровно те, что нужны багажному предмету.<br>SlotPolicy, item-теги, luggage-point — авто-добавляются trait'ом, дизайнер их не трогает.</div>
+          <div class="compare-caption">4 фрагмента — ровно те, что нужны обычному предмету.<br>SlotPolicy, item-теги, slot-point — авто-добавляются trait'ом, дизайнер их не трогает.</div>
         </div>
       </div>
 
       <!-- ITEM 2: Assault Rifle -->
-      <h3 style="margin-top: 56px;">MCRN Assault Rifle · новый ассет, новый класс предмета</h3>
+      <h3 style="margin-top: 56px;">Assault Rifle · новый ассет, новый класс предмета</h3>
       <p class="muted" style="font-size: 14px;">
-        <code>DA_MCRNAssaultRifle</code> добавляется как часть этого же изменения. В текущей модели
+        <code>DA_AssaultRifle</code> добавляется как часть этого же изменения. В текущей модели
         ассета его просто <strong>некуда положить</strong>: ни FamilyId оружия, ни Recoil, ни Stance,
-        ни layer-анимаций в DA нет. Винтовка — конкретная причина, по которой назрел рефактор.
+        ни layer-анимаций в DA нет. Оружие — конкретная причина, по которой назрел рефактор.
       </p>
 
       <div class="editor-compare">
         <div>
           <div class="editor-mock before">
             <div class="panel-head">
-              <span class="label">Если бы в master (с натяжкой)</span>
+              <span class="label">Если бы в текущей модели (с натяжкой)</span>
               <span class="count">13 полей · 8 категорий</span>
             </div>
             <div class="group-head">Item Definition</div>
-              <div class="row"><span>Display Name</span><span class="v set">MCRN Assault Rifle</span></div>
+              <div class="row"><span>Display Name</span><span class="v set">Assault Rifle</span></div>
               <div class="row"><span>Description</span><span class="v empty">(empty)</span></div>
               <div class="row"><span>Icon</span><span class="v empty">None</span></div>
               <div class="row"><span>Item Tags</span><span class="v empty">(empty)</span></div>
               <div class="row"><span>Max Stack Count</span><span class="v">1</span></div>
               <div class="row"><span>Item Type</span><span class="v">Tool</span></div>
               <div class="row"><span>Can Store In Inv</span><span class="v">true</span></div>
-            <div class="group-head">Luggage</div>
-              <div class="row"><span>Luggage Points</span><span class="v empty">(empty)</span></div>
+            <div class="group-head">Slot.A</div>
+              <div class="row"><span>Slot.A Points</span><span class="v empty">(empty)</span></div>
             <div class="group-head">Container</div>
               <div class="row"><span>Container Points</span><span class="v empty">(empty)</span></div>
               <div class="row"><span>Contained Items</span><span class="v empty">[ ]</span></div>
-            <div class="group-head">Cargo</div>
-              <div class="row"><span>Cargo Points</span><span class="v empty">(empty)</span></div>
+            <div class="group-head">Slot.B</div>
+              <div class="row"><span>Slot.B Points</span><span class="v empty">(empty)</span></div>
             <div class="group-head">Pickup</div>
               <div class="row"><span>Pickup Actor</span><span class="v empty">? нет общего класса</span></div>
             <div class="group-head">Equipped</div>
@@ -555,7 +557,7 @@
               <div class="row"><span>Attach Socket</span><span class="v">weapon_r</span></div>
               <div class="row"><span>Equipped Mesh Attach Socket</span><span class="v empty">None</span></div>
             <div class="group-head">Abilities</div>
-              <div class="row"><span>Equipped Ability Set</span><span class="v set">ABS_Weapon_PrimaryRouter</span></div>
+              <div class="row"><span>Equipped Ability Set</span><span class="v set">ABS_WeaponDefault</span></div>
             <div class="group-head">Actions</div>
               <div class="row"><span>Item Added Actions</span><span class="v empty">[ ]</span></div>
             <div style="background: rgba(196,85,77,0.08); border-top: 1px solid var(--danger); padding: 12px 14px; color: var(--danger); font-size: 11px; line-height: 1.5;">
@@ -563,7 +565,7 @@
               Негде положить: <code style="color: var(--danger); background: transparent; border: none; padding: 0;">FamilyId · MeshOverride · ProceduralFire · Recoil · Spread · Sway · StanceGE · ArmsAnimLayer</code>
             </div>
           </div>
-          <div class="compare-caption">7 пустых полей багажа/контейнера + оружейные настройки <strong>не выражаются вовсе</strong>.</div>
+          <div class="compare-caption">7 пустых полей + оружейные настройки <strong>не выражаются вовсе</strong>.</div>
         </div>
 
         <div>
@@ -573,24 +575,24 @@
               <span class="count">3 поля + 1 trait с 4 фрагментами</span>
             </div>
             <div class="group-head">Item Definition</div>
-              <div class="row"><span>Display Name</span><span class="v set">MCRN Assault Rifle</span></div>
+              <div class="row"><span>Display Name</span><span class="v set">Assault Rifle</span></div>
               <div class="row"><span>Description</span><span class="v empty">(empty)</span></div>
               <div class="row"><span>Icon</span><span class="v empty">None</span></div>
             <div class="group-head">Traits [1]</div>
               <div class="nested">
-                <div class="group-head" style="color: var(--accent-bright);">[0] Trait_GuardWeapon</div>
+                <div class="group-head" style="color: var(--accent-bright);">[0] Trait_Weapon</div>
                 <div class="nested">
                   <div class="group-head">[0] Weapon</div>
-                    <div class="row"><span>Family Id</span><span class="v set">WP.Family.Firearm.Pistol</span></div>
-                    <div class="row"><span>Mesh Override</span><span class="v set">SK_MCRNAssaultRifle</span></div>
-                    <div class="row"><span>Stance GE</span><span class="v set">GE_GiveGun_C</span></div>
+                    <div class="row"><span>Family Id</span><span class="v set">Weapon.Family.Rifle</span></div>
+                    <div class="row"><span>Mesh Override</span><span class="v set">SK_AssaultRifle</span></div>
+                    <div class="row"><span>Stance GE</span><span class="v set">GE_EquipWeapon_C</span></div>
                     <div class="row" style="color: var(--text-faint); font-style: italic;"><span>(+ Recoil, Spread, Sway, …)</span><span></span></div>
                   <div class="group-head">[1] Arms Animation</div>
                     <div class="row"><span>Arms Anim Layer</span><span class="v set">ABP_ArmsLayer_Rifle_C</span></div>
                   <div class="group-head">[2] Equip Attach</div>
                     <div class="row"><span>Arms Attach Socket</span><span class="v">weapon_r</span></div>
                   <div class="group-head">[3] Grants Abilities</div>
-                    <div class="row"><span>Ability Set</span><span class="v set">ABS_Weapon_PrimaryRouter</span></div>
+                    <div class="row"><span>Ability Set</span><span class="v set">ABS_WeaponDefault</span></div>
                 </div>
               </div>
           </div>
@@ -603,7 +605,7 @@
         <p>
           Trait выбирает <em>какие</em> фрагменты нужны для роли и кладёт их в DA с разумными дефолтами.
           Дизайнер видит и редактирует фрагменты напрямую, но больше не выбирает из 17 полей,
-          какие применимы для оружия, а какие для багажа. Категории-помойки уходят, остаются
+          какие применимы для оружия, а какие для обычного предмета. Категории-помойки уходят, остаются
           только осмысленные для предмета фрагменты.
         </p>
       </div>
@@ -613,17 +615,17 @@
       <div class="section-head"><span class="num">03</span><h2><span class="accent">//</span> Куда это растёт</h2></div>
 
       <p>
-        Когда подъедут scannable, contraband, документы — это будут <strong>новые traits</strong>.
-        Они добавятся только в те предметы, где нужны, не трогая остальные. Контрабандный био-образец
-        будущей волны:
+        Когда подъедут будущие capability — это будут <strong>новые traits</strong>.
+        Они добавятся только в те предметы, где нужны, не трогая остальные. Пример комбинированного
+        предмета будущей волны:
       </p>
 
       <div class="future-mock">
         <div class="panel-head">
-          <span class="label">DA_Item_BioSample_Hidden · Traits</span>
+          <span class="label">DA_Item_SpecialSample · Traits</span>
         </div>
         <div class="trait-row">
-          <span class="name">[0] Trait_LuggageItem</span>
+          <span class="name">[0] Trait_BackpackItem</span>
           <span class="meta">// как лежит и берётся</span>
           <div class="params">EquippedActor · MeshAttachSocket · AbilitySet</div>
         </div>
@@ -633,14 +635,14 @@
           <div class="params">Stencil · NoiseScale</div>
         </div>
         <div class="trait-row">
-          <span class="name">[2] Trait_Contraband</span>
-          <span class="meta">// классификация</span>
+          <span class="name">[2] Trait_X</span>
+          <span class="meta">// специальная классификация</span>
           <div class="params">Kind · Severity</div>
         </div>
       </div>
 
       <p class="muted">
-        Три trait'а — три аспекта. Каждый собирается из своих параметров. У сапог никакого
+        Три trait'а — три аспекта. Каждый собирается из своих параметров. У обычного предмета никакого
         <code>Stencil</code> или <code>Severity</code> в детайл-панели не появится — потому что нет такого trait'а.
       </p>
     </section>
@@ -654,7 +656,7 @@
       </div>
 
       <p class="muted">
-        Все 43 текущих Item Data Asset мигрируются автоматически на загрузке. Сейв-формат игры,
+        Все существующие Item Data Asset мигрируются автоматически на загрузке. Сейв-формат игры,
         BP-классы предметов, иконки и меши — без изменений.
       </p>
     </section>
@@ -666,7 +668,7 @@
         <summary>А если нужно для одного предмета своё поведение, которого нет в trait'е?</summary>
         <div class="answer">
           У каждого фрагмента внутри trait'а есть свои поля — правишь их прямо в DA. Если нужного фрагмента
-          вообще нет в trait'е (например, добавить ApplyEffectOnAdd к багажному предмету), есть два пути:
+          вообще нет в trait'е (например, добавить ApplyEffectOnAdd к обычному предмету), есть два пути:
           добавить фрагмент в дефолт trait-класса (применимо, если вариация осмысленна и для других предметов),
           либо создать новый trait-наследник в Blueprint с расширенным набором фрагментов.
         </div>
@@ -685,7 +687,7 @@
       <details>
         <summary>Почему не сделать просто разные подклассы Item Data Asset?</summary>
         <div class="answer">
-          Способности ортогональны: один предмет может быть одновременно багажом, сканируемым, контрабандой и квест-item'ом.
+          Способности ортогональны: один предмет может быть одновременно обычным, сканируемым, особым и квест-item'ом.
           Подклассы — это однонаследная иерархия, которая не выражает «и то, и это, и третье».
           Traits — это «и то, и это» через композицию.
         </div>
@@ -693,13 +695,13 @@
 
       <details>
         <summary>Куда писать с вопросами / правками?</summary>
-        <div class="answer">P. Belyaev · <code>p.belyaev@owlcat.games</code></div>
+        <div class="answer">Через внутренний канал команды.</div>
       </details>
     </section>
 
     <footer>
-      <span class="sig">BorderLine · Tech Division · 2026-05-18</span>
-      <span>ITM-001 · REV 02</span>
+      <span class="sig">Tech Note · 2026-05-18</span>
+      <span>ITM-001 · REV 03</span>
     </footer>
 
   </main>
