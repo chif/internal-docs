@@ -6,34 +6,34 @@
 <title>Items · Traits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1116;
-    --bg-elev: #141a21;
-    --bg-card: #161d25;
-    --bg-code: #0a0e12;
-    --bg-panel: #1f2933;
-    --bg-panel-row: #19222b;
-    --bg-panel-head: #2a3540;
+    --bg: #050810;
+    --bg-elev: #08101a;
+    --bg-card: #0a1422;
+    --bg-code: #04070d;
+    --bg-panel: #0f1a2a;
+    --bg-panel-row: #0b1422;
+    --bg-panel-head: #142236;
 
-    --text: #e6e0d4;
-    --text-muted: #9da3a8;
-    --text-faint: #6b7177;
-    --text-dim: #4a4f55;
+    --text: #d4dde6;
+    --text-muted: #8a98a8;
+    --text-faint: #5e6b7a;
+    --text-dim: #3d4856;
 
-    --border: #232a32;
-    --border-soft: #1c2229;
-    --border-hard: #2e363f;
+    --border: #1a2638;
+    --border-soft: #131c2a;
+    --border-hard: #243348;
 
-    --accent: #d97a2c;
-    --accent-bright: #f08a35;
-    --accent-soft: rgba(217, 122, 44, 0.10);
-    --accent-line: rgba(217, 122, 44, 0.35);
+    --accent: #5fc3e8;
+    --accent-bright: #8fd9f0;
+    --accent-soft: rgba(95, 195, 232, 0.10);
+    --accent-line: rgba(95, 195, 232, 0.35);
 
-    --good: #6db075;
-    --warn: #d4a534;
-    --danger: #c4554d;
+    --good: #6dc99a;
+    --warn: #e8c447;
+    --danger: #e87045;
 
     --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
     --sans: 'Inter', -apple-system, system-ui, sans-serif;
@@ -56,15 +56,29 @@
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 3px);
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(143,217,240,0.015) 2px, rgba(143,217,240,0.015) 3px);
     pointer-events: none; z-index: 1000;
   }
   body::after {
     content: '';
     position: fixed; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.4) 100%);
+    background: radial-gradient(ellipse at 70% 30%, rgba(95,195,232,0.04) 0%, transparent 45%),
+                radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.65) 100%);
     pointer-events: none; z-index: 999;
   }
+
+  /* Schematic background — orbital trajectories, ticks, moving markers */
+  .schematic-bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.95;
+  }
+  .schematic-bg #schematic-far,
+  .schematic-bg #schematic-mid { will-change: transform; }
+  .topbar, .frame { position: relative; z-index: 2; }
+  footer { position: relative; z-index: 2; }
 
   ::selection { background: var(--accent); color: var(--bg); }
 
@@ -453,11 +467,472 @@
 </head>
 <body>
 
+<svg class="schematic-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 2700" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Orbit paths centered on (1800, 220) — primary off the upper-right -->
+    <path id="orb-a" d="M 2340 220 a 540 320 0 1 1 -1080 0 a 540 320 0 1 1 1080 0" fill="none"/>
+    <path id="orb-b" d="M 2580 220 a 780 470 0 1 1 -1560 0 a 780 470 0 1 1 1560 0" fill="none"/>
+    <path id="orb-c" d="M 2880 220 a 1080 660 0 1 1 -2160 0 a 1080 660 0 1 1 2160 0" fill="none"/>
+    <path id="orb-d" d="M 3240 220 a 1440 880 0 1 1 -2880 0 a 1440 880 0 1 1 2880 0" fill="none"/>
+    <path id="orb-e" d="M 3660 220 a 1860 1140 0 1 1 -3720 0 a 1860 1140 0 1 1 3720 0" fill="none"/>
+
+    <radialGradient id="primary-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="rgba(143,217,240,0.55)"/>
+      <stop offset="60%" stop-color="rgba(143,217,240,0.05)"/>
+      <stop offset="100%" stop-color="rgba(143,217,240,0)"/>
+    </radialGradient>
+
+    <!-- Venus orbit (between Sol and Earth) -->
+    <path id="orb-v" d="M 2160 220 a 360 210 0 1 1 -720 0 a 360 210 0 1 1 720 0" fill="none"/>
+  </defs>
+
+  <!-- ═════ FAR LAYER (deep parallax — distant stars) ═════ -->
+  <g id="schematic-far" fill="rgba(143,217,240,0.4)">
+    <circle cx="60"   cy="80"   r="0.9"/>
+    <circle cx="140"  cy="240"  r="0.8"/>
+    <circle cx="250"  cy="60"   r="1.0"/>
+    <circle cx="340"  cy="180"  r="0.8"/>
+    <circle cx="460"  cy="40"   r="0.9"/>
+    <circle cx="560"  cy="200"  r="0.7"/>
+    <circle cx="680"  cy="100"  r="0.9"/>
+    <circle cx="800"  cy="60"   r="0.8"/>
+    <circle cx="940"  cy="180"  r="1.0"/>
+    <circle cx="1080" cy="40"   r="0.7"/>
+    <circle cx="1220" cy="160"  r="0.8"/>
+    <circle cx="1360" cy="50"   r="0.9"/>
+    <circle cx="1520" cy="180"  r="0.7"/>
+    <circle cx="1680" cy="100"  r="0.9"/>
+    <circle cx="1840" cy="40"   r="0.8"/>
+
+    <circle cx="80"   cy="400"  r="0.9"/>
+    <circle cx="220"  cy="500"  r="0.7"/>
+    <circle cx="380"  cy="320"  r="0.9"/>
+    <circle cx="540"  cy="460"  r="0.8"/>
+    <circle cx="700"  cy="380"  r="0.9"/>
+    <circle cx="860"  cy="280"  r="0.7"/>
+    <circle cx="1020" cy="420"  r="0.9"/>
+    <circle cx="1180" cy="320"  r="0.8"/>
+    <circle cx="1340" cy="500"  r="0.9"/>
+    <circle cx="1500" cy="400"  r="0.7"/>
+    <circle cx="1660" cy="320"  r="0.9"/>
+    <circle cx="1820" cy="480"  r="0.8"/>
+
+    <circle cx="60"   cy="640"  r="0.8"/>
+    <circle cx="200"  cy="720"  r="0.9"/>
+    <circle cx="360"  cy="660"  r="0.7"/>
+    <circle cx="520"  cy="780"  r="0.9"/>
+    <circle cx="680"  cy="620"  r="0.8"/>
+    <circle cx="820"  cy="740"  r="0.9"/>
+    <circle cx="980"  cy="680"  r="0.7"/>
+    <circle cx="1140" cy="820"  r="0.9"/>
+    <circle cx="1300" cy="700"  r="0.8"/>
+    <circle cx="1460" cy="780"  r="0.9"/>
+    <circle cx="1620" cy="640"  r="0.7"/>
+    <circle cx="1780" cy="720"  r="0.9"/>
+
+    <circle cx="100"  cy="900"  r="0.9"/>
+    <circle cx="260"  cy="1000" r="0.7"/>
+    <circle cx="420"  cy="940"  r="0.8"/>
+    <circle cx="580"  cy="1020" r="0.9"/>
+    <circle cx="740"  cy="900"  r="0.7"/>
+    <circle cx="900"  cy="1000" r="0.9"/>
+    <circle cx="1060" cy="940"  r="0.8"/>
+    <circle cx="1220" cy="1020" r="0.7"/>
+    <circle cx="1380" cy="900"  r="0.9"/>
+    <circle cx="1540" cy="1000" r="0.7"/>
+    <circle cx="1700" cy="940"  r="0.9"/>
+
+    <circle cx="80"   cy="1180" r="0.9"/>
+    <circle cx="240"  cy="1280" r="0.7"/>
+    <circle cx="400"  cy="1200" r="0.9"/>
+    <circle cx="560"  cy="1340" r="0.8"/>
+    <circle cx="720"  cy="1240" r="0.9"/>
+    <circle cx="880"  cy="1180" r="0.7"/>
+    <circle cx="1040" cy="1320" r="0.9"/>
+    <circle cx="1200" cy="1220" r="0.8"/>
+    <circle cx="1360" cy="1340" r="0.9"/>
+    <circle cx="1520" cy="1200" r="0.7"/>
+    <circle cx="1680" cy="1320" r="0.9"/>
+    <circle cx="1840" cy="1240" r="0.7"/>
+
+    <circle cx="60"   cy="1480" r="0.9"/>
+    <circle cx="220"  cy="1580" r="0.7"/>
+    <circle cx="380"  cy="1500" r="0.8"/>
+    <circle cx="540"  cy="1640" r="0.9"/>
+    <circle cx="700"  cy="1520" r="0.7"/>
+    <circle cx="860"  cy="1600" r="0.9"/>
+    <circle cx="1020" cy="1480" r="0.8"/>
+    <circle cx="1180" cy="1640" r="0.7"/>
+    <circle cx="1340" cy="1560" r="0.9"/>
+    <circle cx="1500" cy="1480" r="0.7"/>
+    <circle cx="1660" cy="1620" r="0.9"/>
+    <circle cx="1820" cy="1540" r="0.8"/>
+
+    <circle cx="100"  cy="1780" r="0.9"/>
+    <circle cx="260"  cy="1860" r="0.7"/>
+    <circle cx="420"  cy="1780" r="0.9"/>
+    <circle cx="580"  cy="1900" r="0.8"/>
+    <circle cx="740"  cy="1820" r="0.7"/>
+    <circle cx="900"  cy="1960" r="0.9"/>
+    <circle cx="1060" cy="1820" r="0.8"/>
+    <circle cx="1700" cy="1880" r="0.9"/>
+    <circle cx="1860" cy="1960" r="0.7"/>
+
+    <circle cx="60"   cy="2080" r="0.9"/>
+    <circle cx="200"  cy="2200" r="0.7"/>
+    <circle cx="380"  cy="2120" r="0.8"/>
+    <circle cx="540"  cy="2280" r="0.9"/>
+    <circle cx="700"  cy="2160" r="0.7"/>
+    <circle cx="880"  cy="2260" r="0.9"/>
+    <circle cx="1060" cy="2180" r="0.8"/>
+    <circle cx="1240" cy="2300" r="0.9"/>
+    <circle cx="1420" cy="2200" r="0.7"/>
+    <circle cx="1600" cy="2320" r="0.9"/>
+    <circle cx="1780" cy="2240" r="0.7"/>
+
+    <circle cx="120"  cy="2400" r="0.9"/>
+    <circle cx="320"  cy="2480" r="0.7"/>
+    <circle cx="520"  cy="2420" r="0.8"/>
+    <circle cx="720"  cy="2520" r="0.9"/>
+    <circle cx="920"  cy="2440" r="0.7"/>
+    <circle cx="1120" cy="2540" r="0.9"/>
+    <circle cx="1320" cy="2460" r="0.7"/>
+    <circle cx="1520" cy="2560" r="0.9"/>
+    <circle cx="1720" cy="2440" r="0.8"/>
+    <circle cx="1880" cy="2620" r="0.9"/>
+  </g>
+
+  <!-- ═════ MID LAYER (orbits, planets, stations) ═════ -->
+  <g id="schematic-mid">
+
+  <!-- Faint reference grid -->
+  <g stroke="rgba(95,195,232,0.035)" stroke-width="1" fill="none">
+    <line x1="0" y1="270"  x2="1920" y2="270"/>
+    <line x1="0" y1="540"  x2="1920" y2="540"/>
+    <line x1="0" y1="810"  x2="1920" y2="810"/>
+    <line x1="480"  y1="0" x2="480"  y2="1080"/>
+    <line x1="960"  y1="0" x2="960"  y2="1080"/>
+    <line x1="1440" y1="0" x2="1440" y2="1080"/>
+  </g>
+
+  <!-- Orbit lines -->
+  <use href="#orb-v" stroke="rgba(140,220,110,0.18)" stroke-width="0.8" fill="none" stroke-dasharray="1 4"/>
+  <use href="#orb-a" stroke="rgba(95,195,232,0.22)" stroke-width="1" fill="none" stroke-dasharray="2 6"/>
+  <use href="#orb-b" stroke="rgba(95,195,232,0.16)" stroke-width="1" fill="none"/>
+  <use href="#orb-c" stroke="rgba(95,195,232,0.13)" stroke-width="1" fill="none" stroke-dasharray="2 7"/>
+  <use href="#orb-d" stroke="rgba(95,195,232,0.10)" stroke-width="1" fill="none"/>
+  <use href="#orb-e" stroke="rgba(95,195,232,0.07)" stroke-width="1" fill="none" stroke-dasharray="3 9"/>
+
+  <!-- SOL -->
+  <g transform="translate(1800 220)">
+    <circle r="60" fill="url(#primary-glow)"/>
+    <circle r="6"  fill="rgba(143,217,240,0.95)"/>
+    <circle r="14" fill="none" stroke="rgba(143,217,240,0.45)" stroke-width="1">
+      <animate attributeName="r" values="13;15;13" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.45;0.7;0.45" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <line x1="-26" y1="0" x2="-16" y2="0" stroke="rgba(143,217,240,0.55)" stroke-width="1"/>
+    <line x1="16"  y1="0" x2="26"  y2="0" stroke="rgba(143,217,240,0.55)" stroke-width="1"/>
+    <line x1="0" y1="-26" x2="0" y2="-16" stroke="rgba(143,217,240,0.55)" stroke-width="1"/>
+    <line x1="0" y1="16"  x2="0" y2="26"  stroke="rgba(143,217,240,0.55)" stroke-width="1"/>
+  </g>
+
+  <!-- Off-orbit static markers (background stars) -->
+  <g fill="rgba(143,217,240,0.35)">
+    <circle cx="180"  cy="780" r="1.5"/>
+    <circle cx="320"  cy="120" r="1.5"/>
+    <circle cx="600"  cy="900" r="1.5"/>
+    <circle cx="1140" cy="940" r="1.5"/>
+    <circle cx="1480" cy="80"  r="1.5"/>
+    <circle cx="1620" cy="780" r="1.5"/>
+  </g>
+
+  <!-- ═════════ NAMED BODIES ═════════ -->
+
+  <!-- VENUS — protomolecule construction anomaly (mid-S2 mystery) -->
+  <g>
+    <animateMotion dur="360s" repeatCount="indefinite" rotate="0" begin="-110s"><mpath href="#orb-v"/></animateMotion>
+    <circle r="3.6" fill="rgba(140,220,110,0.75)"/>
+    <circle r="2" fill="rgba(220,250,200,0.85)"/>
+    <!-- broadcast pulses (two staggered) -->
+    <circle r="6" fill="none" stroke="rgba(140,220,110,0.55)" stroke-width="0.7">
+      <animate attributeName="r" values="6;24;6" dur="4.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.55;0;0.55" dur="4.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="6" fill="none" stroke="rgba(140,220,110,0.45)" stroke-width="0.7">
+      <animate attributeName="r" values="6;24;6" dur="4.2s" begin="2.1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.45;0;0.45" dur="4.2s" begin="2.1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- EARTH + LUNA  (orbiting Sol via orb-a) -->
+  <g>
+    <animateMotion dur="540s" repeatCount="indefinite" rotate="0" begin="-180s"><mpath href="#orb-a"/></animateMotion>
+    <circle r="15" fill="none" stroke="rgba(95,195,232,0.20)" stroke-dasharray="1 3"/>
+    <circle r="4.5" fill="rgba(143,217,240,0.92)"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="48s" repeatCount="indefinite"/>
+      <circle cx="15" cy="0" r="1.8" fill="rgba(143,217,240,0.75)"/>
+    </g>
+  </g>
+
+  <!-- MARS + PHOBOS + DEIMOS  (orbiting Sol via orb-b) -->
+  <g>
+    <animateMotion dur="780s" repeatCount="indefinite" rotate="0" begin="-260s"><mpath href="#orb-b"/></animateMotion>
+    <circle r="13" fill="none" stroke="rgba(232,196,71,0.20)" stroke-dasharray="1 3"/>
+    <circle r="3.8" fill="rgba(232,196,71,0.85)"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="14s" repeatCount="indefinite"/>
+      <circle cx="8" cy="0" r="1.4" fill="rgba(232,196,71,0.75)"/>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="180" to="540" dur="38s" repeatCount="indefinite"/>
+      <circle cx="11.5" cy="0" r="1.1" fill="rgba(232,196,71,0.6)"/>
+    </g>
+  </g>
+
+  <!-- ═════ THE BELT — rotating ring around Sol ═════ -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate" from="0 1800 220" to="360 1800 220" dur="1800s" repeatCount="indefinite"/>
+
+    <!-- Belt rubble scatter -->
+    <g fill="rgba(143,217,240,0.32)">
+      <circle cx="765"  cy="285" r="1"/>
+      <circle cx="810"  cy="334" r="1"/>
+      <circle cx="843"  cy="367" r="1"/>
+      <circle cx="867"  cy="402" r="1"/>
+      <circle cx="894"  cy="425" r="1"/>
+      <circle cx="930"  cy="475" r="1"/>
+      <circle cx="976"  cy="513" r="1"/>
+      <circle cx="1020" cy="557" r="1"/>
+      <circle cx="1064" cy="616" r="1"/>
+      <circle cx="1090" cy="640" r="1"/>
+      <circle cx="1158" cy="678" r="1"/>
+      <circle cx="1180" cy="705" r="1"/>
+      <circle cx="1215" cy="743" r="1"/>
+      <circle cx="1260" cy="775" r="1"/>
+      <circle cx="1310" cy="805" r="1"/>
+      <circle cx="1370" cy="830" r="1"/>
+      <circle cx="1450" cy="858" r="1"/>
+      <circle cx="1520" cy="872" r="1"/>
+      <circle cx="848"  cy="498" r="1"/>
+      <circle cx="970"  cy="603" r="1"/>
+      <circle cx="1138" cy="752" r="1"/>
+      <circle cx="990"  cy="475" r="1"/>
+      <circle cx="1245" cy="620" r="1"/>
+      <circle cx="1395" cy="755" r="1"/>
+    </g>
+
+    <!-- Tycho — shipyard with Behemoth/Nauvoo under construction (S2 foreshadowing) -->
+    <g transform="translate(737 335)">
+      <rect x="-4" y="-4" width="8" height="8" fill="none" stroke="rgba(143,217,240,0.7)" stroke-width="1"/>
+      <circle r="2.4" fill="rgba(143,217,240,0.95)"/>
+      <!-- Generation-ship wireframe on the slip -->
+      <g transform="translate(8 -2)" opacity="0.7">
+        <rect x="0" y="-1.6" width="9" height="3.2" fill="none" stroke="rgba(143,217,240,0.5)" stroke-width="0.45"/>
+        <line x1="0" y1="0" x2="9" y2="0" stroke="rgba(143,217,240,0.35)" stroke-width="0.4"/>
+        <line x1="2.5" y1="-1.6" x2="2.5" y2="1.6" stroke="rgba(143,217,240,0.35)" stroke-width="0.4"/>
+        <line x1="5" y1="-1.6" x2="5" y2="1.6" stroke="rgba(143,217,240,0.35)" stroke-width="0.4"/>
+        <line x1="7.5" y1="-1.6" x2="7.5" y2="1.6" stroke="rgba(143,217,240,0.35)" stroke-width="0.4"/>
+        <!-- nose cone -->
+        <path d="M 9 -1.6 L 11 0 L 9 1.6" fill="none" stroke="rgba(143,217,240,0.45)" stroke-width="0.4"/>
+        <!-- subtle construction pulse -->
+        <animate attributeName="opacity" values="0.7;0.4;0.7" dur="5s" repeatCount="indefinite"/>
+      </g>
+    </g>
+
+    <!-- Ceres — capital (ringed dot) -->
+    <g transform="translate(865 550)">
+      <circle r="9" fill="none" stroke="rgba(143,217,240,0.45)" stroke-width="0.7"/>
+      <circle r="3.5" fill="rgba(143,217,240,0.95)"/>
+    </g>
+
+    <!-- Pallas -->
+    <circle cx="1106" cy="726" r="2.6" fill="rgba(143,217,240,0.85)"/>
+
+    <!-- Eros [LOST] — warm-colored with diagonal cross -->
+    <g transform="translate(1431 840)">
+      <circle r="2.4" fill="rgba(232,112,69,0.55)"/>
+      <line x1="-3" y1="-3" x2="3" y2="3" stroke="rgba(232,112,69,0.85)" stroke-width="0.9"/>
+      <line x1="-3" y1="3" x2="3" y2="-3" stroke="rgba(232,112,69,0.85)" stroke-width="0.9"/>
+    </g>
+
+    <!-- Anderson -->
+    <circle cx="1612" cy="870" r="2" fill="rgba(143,217,240,0.7)"/>
+  </g>
+
+  <!-- JUPITER + GANYMEDE + IO (orbiting Sol via orb-d) -->
+  <g>
+    <animateMotion dur="1380s" repeatCount="indefinite" rotate="0" begin="-460s"><mpath href="#orb-d"/></animateMotion>
+    <circle r="14" fill="none" stroke="rgba(95,195,232,0.16)" stroke-dasharray="1 3"/>
+    <circle r="5" fill="rgba(143,217,240,0.88)"/>
+
+    <!-- Io — classified protomolecule lab (mid-S2 secret, Strickland's children) -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="38s" repeatCount="indefinite"/>
+      <circle cx="9" cy="0" r="1.6" fill="none" stroke="rgba(143,217,240,0.55)" stroke-width="0.6" stroke-dasharray="0.8 0.8"/>
+      <circle cx="9" cy="0" r="0.7" fill="rgba(143,217,240,0.4)"/>
+    </g>
+
+    <!-- Ganymede — incident site (mid-S2 hybrid attack, agricultural collapse) -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="72s" repeatCount="indefinite"/>
+      <circle cx="14" cy="0" r="1.8" fill="rgba(143,217,240,0.78)"/>
+      <!-- incident X overlay -->
+      <line x1="12.2" y1="-1.6" x2="15.8" y2="1.6" stroke="rgba(232,112,69,0.85)" stroke-width="0.7"/>
+      <line x1="12.2" y1="1.6" x2="15.8" y2="-1.6" stroke="rgba(232,112,69,0.85)" stroke-width="0.7"/>
+    </g>
+  </g>
+
+  <!-- SATURN (orbiting Sol via orb-e) + Phoebe [destroyed] (origin of protomolecule) -->
+  <g>
+    <animateMotion dur="2200s" repeatCount="indefinite" rotate="0" begin="-700s"><mpath href="#orb-e"/></animateMotion>
+    <ellipse cx="0" cy="0" rx="11" ry="3" fill="none" stroke="rgba(143,217,240,0.45)" stroke-width="0.8"/>
+    <circle r="3.8" fill="rgba(143,217,240,0.82)"/>
+
+    <!-- Phoebe [destroyed] — far moon, origin of protomolecule (pre-show, foreshadowing source) -->
+    <g transform="translate(-15 -4)">
+      <line x1="-2.4" y1="-2.4" x2="2.4" y2="2.4" stroke="rgba(232,112,69,0.7)" stroke-width="0.7"/>
+      <line x1="-2.4" y1="2.4" x2="2.4" y2="-2.4" stroke="rgba(232,112,69,0.7)" stroke-width="0.7"/>
+      <circle r="3.5" fill="none" stroke="rgba(232,112,69,0.3)" stroke-width="0.5" stroke-dasharray="0.5 1.5"/>
+    </g>
+  </g>
+
+  <!-- Corner brackets — HUD overlay feel -->
+  <g stroke="rgba(95,195,232,0.42)" stroke-width="1" fill="none">
+    <path d="M 30 30 L 80 30 M 30 30 L 30 80"/>
+    <path d="M 1890 30 L 1840 30 M 1890 30 L 1890 80"/>
+    <path d="M 30 1050 L 80 1050 M 30 1050 L 30 1000"/>
+    <path d="M 1890 1050 L 1840 1050 M 1890 1050 L 1890 1000"/>
+  </g>
+
+  <!-- Scale bar (lower-left of initial viewport) -->
+  <g transform="translate(40 1010)" stroke="rgba(143,217,240,0.45)" fill="none">
+    <line x1="0" y1="0" x2="120" y2="0" stroke-width="1"/>
+    <line x1="0" y1="-3" x2="0" y2="3"/>
+    <line x1="60" y1="-2" x2="60" y2="2"/>
+    <line x1="120" y1="-3" x2="120" y2="3"/>
+  </g>
+
+  <!-- ─────── OUTER SYSTEM (revealed by scroll) ─────── -->
+
+  <!-- Outer-system divider -->
+  <g stroke="rgba(95,195,232,0.18)" stroke-width="1" fill="none">
+    <line x1="0" y1="1200" x2="1920" y2="1200" stroke-dasharray="6 4"/>
+    <line x1="320"  y1="1195" x2="320"  y2="1205"/>
+    <line x1="640"  y1="1195" x2="640"  y2="1205"/>
+    <line x1="960"  y1="1195" x2="960"  y2="1205"/>
+    <line x1="1280" y1="1195" x2="1280" y2="1205"/>
+    <line x1="1600" y1="1195" x2="1600" y2="1205"/>
+  </g>
+
+  <!-- URANUS — tilted ring -->
+  <g transform="translate(380 1380)">
+    <ellipse cx="0" cy="0" rx="9" ry="2.4" fill="none" stroke="rgba(143,217,240,0.4)" stroke-width="0.7" transform="rotate(70)"/>
+    <circle r="4.2" fill="rgba(143,217,240,0.78)"/>
+  </g>
+
+  <!-- NEPTUNE -->
+  <g transform="translate(1140 1500)">
+    <circle r="4" fill="rgba(143,217,240,0.72)"/>
+  </g>
+
+  <!-- THE RING — slow zone gateway (counter-rotating layers) -->
+  <g transform="translate(1380 1860)">
+    <circle r="80" fill="rgba(143,217,240,0.04)"/>
+    <circle r="62" fill="none" stroke="rgba(143,217,240,0.45)" stroke-width="1"/>
+
+    <!-- Outer dashed ring rotates clockwise -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="160s" repeatCount="indefinite"/>
+      <circle r="48" fill="none" stroke="rgba(143,217,240,0.32)" stroke-width="0.8" stroke-dasharray="3 5"/>
+    </g>
+
+    <!-- Inner ring rotates counter-clockwise, with tick marks -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="220s" repeatCount="indefinite"/>
+      <circle r="32" fill="none" stroke="rgba(143,217,240,0.28)" stroke-width="0.7"/>
+      <line x1="-34" y1="0" x2="-28" y2="0" stroke="rgba(143,217,240,0.55)" stroke-width="0.8"/>
+      <line x1="28" y1="0" x2="34" y2="0" stroke="rgba(143,217,240,0.55)" stroke-width="0.8"/>
+      <line x1="0" y1="-34" x2="0" y2="-28" stroke="rgba(143,217,240,0.55)" stroke-width="0.8"/>
+      <line x1="0" y1="28" x2="0" y2="34" stroke="rgba(143,217,240,0.55)" stroke-width="0.8"/>
+    </g>
+
+    <!-- Central marker pulses subtly -->
+    <circle r="3.2" fill="rgba(143,217,240,0.95)">
+      <animate attributeName="r" values="3;3.6;3" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.95;0.7;0.95" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- External crosshair tick marks (static) -->
+    <line x1="-104" y1="0" x2="-72" y2="0" stroke="rgba(143,217,240,0.35)" stroke-width="0.8" stroke-dasharray="2 3"/>
+    <line x1="72" y1="0" x2="104" y2="0" stroke="rgba(143,217,240,0.35)" stroke-width="0.8" stroke-dasharray="2 3"/>
+    <line x1="0" y1="-104" x2="0" y2="-72" stroke="rgba(143,217,240,0.35)" stroke-width="0.8" stroke-dasharray="2 3"/>
+    <line x1="0" y1="72" x2="0" y2="104" stroke="rgba(143,217,240,0.35)" stroke-width="0.8" stroke-dasharray="2 3"/>
+  </g>
+
+  <!-- Anomaly in the 1300 systems — protomolecule signature detected (mid-S2 / post-Ring foreshadowing) -->
+  <g transform="translate(1280 2400)">
+    <circle r="1.8" fill="rgba(140,220,110,0.85)"/>
+    <circle r="2.6" fill="rgba(140,220,110,0.3)">
+      <animate attributeName="r" values="2.6;6;2.6" dur="3.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0;0.3" dur="3.6s" repeatCount="indefinite"/>
+    </circle>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="40s" repeatCount="indefinite"/>
+      <circle r="8" fill="none" stroke="rgba(140,220,110,0.5)" stroke-width="0.45" stroke-dasharray="1 3"/>
+      <line x1="-10" y1="0" x2="-7" y2="0" stroke="rgba(140,220,110,0.55)" stroke-width="0.45"/>
+      <line x1="7" y1="0" x2="10" y2="0" stroke="rgba(140,220,110,0.55)" stroke-width="0.45"/>
+    </g>
+  </g>
+
+  <!-- 1300 systems scatter (beyond the Ring) -->
+  <g fill="rgba(143,217,240,0.38)">
+    <circle cx="180"  cy="2080" r="1.3"/>
+    <circle cx="260"  cy="2160" r="1.1"/>
+    <circle cx="340"  cy="2050" r="1.4"/>
+    <circle cx="420"  cy="2220" r="1.2"/>
+    <circle cx="510"  cy="2110" r="1.3"/>
+    <circle cx="600"  cy="2300" r="1.1"/>
+    <circle cx="700"  cy="2050" r="1.4"/>
+    <circle cx="780"  cy="2240" r="1.2"/>
+    <circle cx="860"  cy="2130" r="1.3"/>
+    <circle cx="940"  cy="2280" r="1.2"/>
+    <circle cx="1020" cy="2180" r="1.3"/>
+    <circle cx="1100" cy="2350" r="1.1"/>
+    <circle cx="1200" cy="2240" r="1.3"/>
+    <circle cx="1280" cy="2400" r="1.2"/>
+    <circle cx="1370" cy="2310" r="1.3"/>
+    <circle cx="1480" cy="2200" r="1.2"/>
+    <circle cx="1580" cy="2370" r="1.3"/>
+    <circle cx="1680" cy="2280" r="1.1"/>
+    <circle cx="1760" cy="2440" r="1.3"/>
+    <circle cx="240"  cy="2380" r="1.1"/>
+    <circle cx="380"  cy="2470" r="1.2"/>
+    <circle cx="540"  cy="2440" r="1.3"/>
+    <circle cx="730"  cy="2470" r="1.1"/>
+    <circle cx="900"  cy="2480" r="1.2"/>
+    <circle cx="1080" cy="2480" r="1.3"/>
+    <circle cx="1260" cy="2480" r="1.1"/>
+    <circle cx="1440" cy="2480" r="1.2"/>
+    <circle cx="1620" cy="2480" r="1.3"/>
+  </g>
+
+  <!-- Frame end divider -->
+  <g stroke="rgba(95,195,232,0.16)" stroke-width="1" fill="none">
+    <line x1="0" y1="2550" x2="1920" y2="2550" stroke-dasharray="6 4"/>
+    <line x1="100"  y1="2545" x2="100"  y2="2555"/>
+    <line x1="1820" y1="2545" x2="1820" y2="2555"/>
+  </g>
+
+  </g><!-- /schematic-mid -->
+</svg>
+
 <div class="topbar">
   <div class="frame row">
-    <span><span class="dot"></span>TECH NOTE</span>
+    <span><span class="dot"></span>OPS // TECH NOTE</span>
     <span class="classification">ARCH · ITEMS COMPOSITION</span>
-    <span>ITM-001 · REV 04</span>
+    <span>ITM-001 · REV 05 · 2026.05.20</span>
   </div>
 </div>
 
@@ -465,7 +940,7 @@
   <main>
 
     <header class="dossier">
-      <div class="stamp">// CURRENT MODEL · INVENTORY</div>
+      <div class="stamp">// SUBJECT 01 · ITEMS COMPOSITION · ACTIVE</div>
       <h1>Items.<br><span class="accent">Traits + Archetypes</span>.</h1>
       <p class="lede">
         Предмет в редакторе теперь собирается из Archetype (общий шаблон) и Traits (что добавлено
@@ -808,12 +1283,33 @@
     </section>
 
     <footer>
-      <span class="sig">Tech Note · 2026-05-20</span>
-      <span>ITM-001 · REV 04</span>
+      <span class="sig">TECH NOTE · 2026.05.20</span>
+      <span>ITM-001 · REV 05</span>
     </footer>
 
   </main>
 </div>
+
+<script>
+  (function() {
+    var far = document.getElementById('schematic-far');
+    var mid = document.getElementById('schematic-mid');
+    if (!far || !mid) return;
+    var farFactor = 0.12;
+    var midFactor = 0.34;
+    var raf = false;
+    function tick() {
+      var s = window.scrollY;
+      far.setAttribute('transform', 'translate(0,' + (-s * farFactor).toFixed(2) + ')');
+      mid.setAttribute('transform', 'translate(0,' + (-s * midFactor).toFixed(2) + ')');
+      raf = false;
+    }
+    window.addEventListener('scroll', function() {
+      if (!raf) { window.requestAnimationFrame(tick); raf = true; }
+    }, { passive: true });
+    tick();
+  })();
+</script>
 
 </body>
 </html>
