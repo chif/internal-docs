@@ -272,6 +272,92 @@
   .callout.good .label { color: var(--good); }
   .callout p:last-child { margin-bottom: 0; }
 
+  /* Concept layout: [Archetype → Trait] | [Fragment] */
+  .concept-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 18px;
+    margin: 28px 0 8px 0;
+  }
+  @media (max-width: 900px) {
+    .concept-layout { grid-template-columns: 1fr; }
+  }
+  .concept-group {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px 22px 22px;
+  }
+  .concept-group-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 16px;
+  }
+  .concept-group-label .sep { color: var(--accent); margin: 0 6px; }
+
+  .authoring-chain {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr;
+    gap: 14px;
+    align-items: stretch;
+  }
+  @media (max-width: 600px) {
+    .authoring-chain { grid-template-columns: 1fr; gap: 16px; }
+    .authoring-chain .arrow { display: none; }
+  }
+  .authoring-chain .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .authoring-chain .arrow::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: var(--accent-line);
+  }
+  .authoring-chain .arrow span {
+    position: relative;
+    background: var(--bg-card);
+    color: var(--accent);
+    padding: 0 4px;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .mini-card .mini-name {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--accent);
+    margin: 0 0 8px 0;
+    letter-spacing: -0.01em;
+  }
+  .mini-card p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .mini-card p:last-child { margin-bottom: 0; }
+  .mini-card .mini-meta {
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+  .mini-card .mini-meta .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-right: 8px;
+  }
+
   /* Motivation grid */
   .why-grid {
     display: grid;
@@ -371,7 +457,7 @@
   <div class="frame row">
     <span><span class="dot"></span>TECH NOTE</span>
     <span class="classification">ARCH · ITEMS COMPOSITION</span>
-    <span>ITM-001 · REV 03</span>
+    <span>ITM-001 · REV 04</span>
   </div>
 </div>
 
@@ -379,29 +465,65 @@
   <main>
 
     <header class="dossier">
-      <div class="stamp">// SYSTEM UPGRADE · INVENTORY</div>
-      <h1>Items.<br><span class="accent">Traits</span> вместо россыпи полей.</h1>
+      <div class="stamp">// CURRENT MODEL · INVENTORY</div>
+      <h1>Items.<br><span class="accent">Traits + Archetypes</span>.</h1>
       <p class="lede">
-        Item Data Asset перестаёт быть «свалкой свойств». Свойства переезжают в traits —
-        каждый отвечает за свой аспект предмета. Editor становится в разы чище.
+        Предмет в редакторе теперь собирается из Archetype (общий шаблон) и Traits (что добавлено
+        или переопределено локально). Из Blueprint тот же предмет читается через Fragments.
       </p>
     </header>
 
-    <section id="why">
-      <div class="section-head"><span class="num">01</span><h2><span class="accent">//</span> Зачем это</h2></div>
+    <section id="concepts">
+      <div class="section-head"><span class="num">01</span><h2><span class="accent">//</span> Понятия</h2></div>
 
-      <p class="big">
-        Сейчас Item Data Asset показывает дизайнеру <strong>все возможные свойства предмета сразу</strong> —
-        включая те, что никогда не будут заполнены. У обычного предмета есть поля,
-        относящиеся к контейнерам. У валюты есть поля экипировки. И так дальше.
+      <p>
+        В редакторе ты работаешь с цепочкой <strong>Archetype → Trait</strong>: Archetype задаёт шаблон
+        семейства, конкретный предмет наследует Traits и при необходимости переопределяет или добавляет
+        свои. <strong>Fragments</strong> — это поля с данными внутри Trait; их же читает Blueprint.
       </p>
 
+      <div class="concept-layout">
+        <div class="concept-group">
+          <div class="concept-group-label">Что правишь в редакторе</div>
+
+          <div class="authoring-chain">
+            <div class="mini-card">
+              <h3 class="mini-name">Archetype</h3>
+              <p>Общий шаблон для семейства предметов: какие Traits в них есть по умолчанию и какие у них значения.</p>
+              <p class="mini-meta"><span class="lbl">Пример</span>Backpack Item, Rifle.</p>
+            </div>
+
+            <div class="arrow"><span>▶</span></div>
+
+            <div class="mini-card">
+              <h3 class="mini-name">Trait</h3>
+              <p>Конкретный предмет наследует Traits из Archetype, переопределяет или сбрасывает их и при необходимости добавляет свои.</p>
+              <p class="mini-meta"><span class="lbl">Где</span>Списки <code>Archetype Traits</code> и <code>Traits</code> в Details panel.</p>
+              <p class="mini-meta"><span class="lbl">Пример</span>Display Info, Equippable, Slot Policy, Weapon Setup.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="concept-group">
+          <div class="concept-group-label">Внутри Trait</div>
+
+          <div class="mini-card">
+            <h3 class="mini-name">Fragment</h3>
+            <p>Набор полей, описывающих одну сторону предмета: что показать в UI, какая отдача, какой сокет руки. Их ты и заполняешь внутри Trait.</p>
+            <p class="mini-meta"><span class="lbl">BP</span>Нода <strong>Get Item Fragment</strong>.</p>
+            <p class="mini-meta"><span class="lbl">Пример</span>Display Info, Weapon Recoil, Arms Animation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="section-head"><span class="num">02</span><h2><span class="accent">//</span> Зачем это</h2></div>
+
       <p class="big">
-        Когда подъедут новые capability (weapon, scannable, специальные категории, quest-привязки) —
-        добавится <strong>ещё столько же полей</strong>. И большинство из них так же будут пустыми
-        у большинства предметов. Текущая модель упирается в этот рост: добавить, например, винтовку
-        как DA сейчас просто <strong>некуда</strong> — FamilyId, Recoil, Stance не имеют места
-        в существующих полях.
+        Старый ассет показывал дизайнеру <strong>все возможные свойства предмета сразу</strong> —
+        включая те, что никогда не будут заполнены. Теперь общий состав предмета приходит из Archetype,
+        а в самом ассете правишь только то, что отличается от шаблона или добавляется поверх него.
       </p>
 
       <div class="why-grid">
@@ -412,39 +534,24 @@
         </div>
         <div class="why-card">
           <div class="num">02</div>
-          <h4>Меньше ошибок</h4>
-          <p>Невозможно «забыть» заполнить — нужные поля приходят набором, отсутствующих просто нет.</p>
+          <h4>Наследование</h4>
+          <p>Archetype задаёт общий состав предмета. Конкретный ассет переопределяет только нужные унаследованные Traits.</p>
         </div>
         <div class="why-card">
           <div class="num">03</div>
           <h4>Готовность к росту</h4>
-          <p>Новая способность (weapon, scannable, capability X) — новый trait. Добавляем туда, где нужно. Не трогаем то, где не нужно.</p>
-        </div>
-        <div class="why-card">
-          <div class="num">04</div>
-          <h4>Словарь предметов</h4>
-          <p>Имена trait'ов становятся словарём: «это handheld tool», «это контейнер». Понятно из списка.</p>
+          <p>Новая возможность (оружие, scannable, любая другая) — это новый Trait. Добавляем там, где нужно. Не трогаем там, где не нужно.</p>
         </div>
       </div>
 
-      <div class="callout accent">
-        <span class="label">Два механизма, видны оба</span>
-        <p>
-          <strong>Фрагменты</strong> (<code>UItemFragment</code>) — строительные блоки: <code>Equippable</code>,
-          <code>PickupActor</code>, <code>GrantsAbilities</code>, <code>Weapon</code>, <code>Container</code> и т.д.
-          <strong>Traits</strong> — рецепты, которые предзаполняют DA правильным набором этих фрагментов
-          и определяют, что синтезируется автоматически. Дизайнер выбирает trait, видит внутри него
-          набор фрагментов с дефолтами, и редактирует их поля напрямую.
-        </p>
-      </div>
     </section>
 
     <section id="editor">
-      <div class="section-head"><span class="num">02</span><h2><span class="accent">//</span> Editor: до и после</h2></div>
+      <div class="section-head"><span class="num">03</span><h2><span class="accent">//</span> Редактор: до и после</h2></div>
 
       <p>
-        Два реальных ассета. Слева — как они выглядят в детайл-панели сейчас.
-        Справа — как будут.
+        Два реальных ассета. Слева — как они выглядят в панели Details в старой модели.
+        Справа — как они выглядят в новой композиционной модели.
       </p>
 
       <!-- ITEM 1: Helmet (generic backpack item) -->
@@ -458,7 +565,7 @@
         <div>
           <div class="editor-mock before">
             <div class="panel-head">
-              <span class="label">Сейчас</span>
+              <span class="label">Старая модель</span>
               <span class="count">14 полей · 8 категорий</span>
             </div>
             <div class="group-head">Item Definition</div>
@@ -487,52 +594,51 @@
             <div class="group-head">Actions</div>
               <div class="row"><span>Item Added Actions</span><span class="v empty">[ ]</span></div>
           </div>
-          <div class="compare-caption">4 пустых поля + рассыпанные по 4 категориям equip/pickup-настройки.<br>Дизайнер угадывает, что заполнять.</div>
+          <div class="compare-caption">4 пустых поля и настройки экипировки/подбора, размазанные по 4 категориям.<br>Дизайнер угадывает, что заполнять.</div>
         </div>
 
         <div>
           <div class="editor-mock after">
             <div class="panel-head">
-              <span class="label">После</span>
-              <span class="count">3 поля + 1 trait с 4 фрагментами</span>
+              <span class="label">Новая модель</span>
+              <span class="count">Archetype + унаследованные Traits</span>
             </div>
-            <div class="group-head">Item Definition</div>
-              <div class="row"><span>Display Name</span><span class="v set">Helmet</span></div>
-              <div class="row"><span>Description</span><span class="v set">(описание...)</span></div>
-              <div class="row"><span>Icon</span><span class="v set">T_UI_icon_Item_Helmet</span></div>
-            <div class="group-head">Traits [1]</div>
+            <div class="group-head">Composition</div>
+              <div class="row"><span>Archetype</span><span class="v set">DA_Archetype_BackpackItem</span></div>
+            <div class="group-head">Archetype Traits</div>
               <div class="nested">
-                <div class="group-head" style="color: var(--accent-bright);">[0] Trait_BackpackItem</div>
-                <div class="nested">
-                  <div class="group-head">[0] Equippable</div>
-                    <div class="row"><span>Equipped Actor</span><span class="v set">BP_Equipped_Helmet_C</span></div>
-                  <div class="group-head">[1] Equip Attach</div>
-                    <div class="row"><span>Arms Attach Socket</span><span class="v">weapon_r</span></div>
-                    <div class="row"><span>Item Mesh Align Socket</span><span class="v set">skt_HandPlacement</span></div>
-                  <div class="group-head">[2] Grants Abilities</div>
-                    <div class="row"><span>Ability Set</span><span class="v set">AS_ItemCommon</span></div>
-                  <div class="group-head">[3] Pickup Actor</div>
-                    <div class="row"><span>Pickup Class</span><span class="v set">BP_PickUp_Helmet_C</span></div>
-                </div>
+                <div class="group-head" style="color: var(--accent-bright);">Display Info</div>
+                  <div class="row"><span>Display Name</span><span class="v set">Helmet</span></div>
+                  <div class="row"><span>Icon</span><span class="v set">T_UI_icon_Item_Helmet</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Slot Policy</div>
+                  <div class="row"><span>Allowed Slots</span><span class="v set">Backpack</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Equippable</div>
+                  <div class="row"><span>Equipped Actor</span><span class="v set">BP_Equipped_Helmet_C</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Equip Attach</div>
+                  <div class="row"><span>Arms Attach Socket</span><span class="v">weapon_r</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Pickup Actor</div>
+                  <div class="row"><span>Pickup Class</span><span class="v set">BP_PickUp_Helmet_C</span></div>
               </div>
+            <div class="group-head">Traits</div>
+              <div class="row"><span style="grid-column: 1 / -1; color: var(--text-dim); font-style: italic;">— пусто —</span></div>
           </div>
-          <div class="compare-caption">4 фрагмента — ровно те, что нужны обычному предмету.<br>SlotPolicy, item-теги, slot-point — авто-добавляются trait'ом, дизайнер их не трогает.</div>
+          <div class="compare-caption">Общий состав приходит из Archetype.<br>Конкретный предмет правит только унаследованные значения.</div>
         </div>
       </div>
 
       <!-- ITEM 2: Assault Rifle -->
       <h3 style="margin-top: 56px;">Assault Rifle · новый ассет, новый класс предмета</h3>
       <p class="muted" style="font-size: 14px;">
-        <code>DA_AssaultRifle</code> добавляется как часть этого же изменения. В текущей модели
-        ассета его просто <strong>некуда положить</strong>: ни FamilyId оружия, ни Recoil, ни Stance,
-        ни layer-анимаций в DA нет. Оружие — конкретная причина, по которой назрел рефактор.
+        <code>DA_AssaultRifle</code> добавляется в составе этого же изменения. В старой модели ассета
+        его просто <strong>некуда положить</strong>: ни FamilyId оружия, ни Recoil, ни Stance, ни слоёв
+        анимации в ассете нет. Оружие — конкретная причина, по которой назрел рефакторинг.
       </p>
 
       <div class="editor-compare">
         <div>
           <div class="editor-mock before">
             <div class="panel-head">
-              <span class="label">Если бы в текущей модели (с натяжкой)</span>
+              <span class="label">Старая модель (с натяжкой)</span>
               <span class="count">13 полей · 8 категорий</span>
             </div>
             <div class="group-head">Item Definition</div>
@@ -562,115 +668,111 @@
               <div class="row"><span>Item Added Actions</span><span class="v empty">[ ]</span></div>
             <div style="background: rgba(196,85,77,0.08); border-top: 1px solid var(--danger); padding: 12px 14px; color: var(--danger); font-size: 11px; line-height: 1.5;">
               <strong style="color: var(--danger); text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; display: block; margin-bottom: 6px;">// блокер</strong>
-              Негде положить: <code style="color: var(--danger); background: transparent; border: none; padding: 0;">FamilyId · MeshOverride · ProceduralFire · Recoil · Spread · Sway · StanceGE · ArmsAnimLayer</code>
+              В ассете негде разместить: <code style="color: var(--danger); background: transparent; border: none; padding: 0;">Family Id · Mesh Override · Procedural Fire · Recoil · Spread · Sway · Stance · Arms Animation</code>
             </div>
           </div>
-          <div class="compare-caption">7 пустых полей + оружейные настройки <strong>не выражаются вовсе</strong>.</div>
+          <div class="compare-caption">7 пустых полей, а оружейные настройки <strong>не выражаются вовсе</strong>.</div>
         </div>
 
         <div>
           <div class="editor-mock after">
             <div class="panel-head">
-              <span class="label">После</span>
-              <span class="count">3 поля + 1 trait с 4 фрагментами</span>
+              <span class="label">Новая модель</span>
+              <span class="count">Archetype винтовки + Trait Weapon Setup</span>
             </div>
-            <div class="group-head">Item Definition</div>
-              <div class="row"><span>Display Name</span><span class="v set">Assault Rifle</span></div>
-              <div class="row"><span>Description</span><span class="v empty">(empty)</span></div>
-              <div class="row"><span>Icon</span><span class="v empty">None</span></div>
-            <div class="group-head">Traits [1]</div>
+            <div class="group-head">Composition</div>
+              <div class="row"><span>Archetype</span><span class="v set">DA_Archetype_Rifle</span></div>
+            <div class="group-head">Archetype Traits</div>
               <div class="nested">
-                <div class="group-head" style="color: var(--accent-bright);">[0] Trait_Weapon</div>
-                <div class="nested">
-                  <div class="group-head">[0] Weapon</div>
-                    <div class="row"><span>Family Id</span><span class="v set">Weapon.Family.Rifle</span></div>
-                    <div class="row"><span>Mesh Override</span><span class="v set">SK_AssaultRifle</span></div>
-                    <div class="row"><span>Stance GE</span><span class="v set">GE_EquipWeapon_C</span></div>
-                    <div class="row" style="color: var(--text-faint); font-style: italic;"><span>(+ Recoil, Spread, Sway, …)</span><span></span></div>
-                  <div class="group-head">[1] Arms Animation</div>
-                    <div class="row"><span>Arms Anim Layer</span><span class="v set">ABP_ArmsLayer_Rifle_C</span></div>
-                  <div class="group-head">[2] Equip Attach</div>
-                    <div class="row"><span>Arms Attach Socket</span><span class="v">weapon_r</span></div>
-                  <div class="group-head">[3] Grants Abilities</div>
-                    <div class="row"><span>Ability Set</span><span class="v set">ABS_WeaponDefault</span></div>
-                </div>
+                <div class="group-head" style="color: var(--accent-bright);">Item Role</div>
+                  <div class="row"><span>Role Tag</span><span class="v set">Item.Role.Weapon</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Slot Policy</div>
+                  <div class="row"><span>Allowed Slots</span><span class="v set">Toolbar</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Equip Attach</div>
+                  <div class="row"><span>Arms Attach Socket</span><span class="v">weapon_r</span></div>
+                <div class="group-head" style="color: var(--accent-bright);">Weapon Setup</div>
+                  <div class="row"><span>Presentation</span><span class="v set">SK_AssaultRifle</span></div>
+                  <div class="row"><span>Firearm</span><span class="v set">Trigger · Feed · Ballistics · Recoil</span></div>
+                  <div class="row"><span>Procedural Fire</span><span class="v set">enabled</span></div>
               </div>
+            <div class="group-head">Traits</div>
+              <div class="row"><span style="grid-column: 1 / -1; color: var(--text-dim); font-style: italic;">— пусто —</span></div>
           </div>
-          <div class="compare-caption">FamilyId, Recoil, Stance — теперь у Weapon-фрагмента есть дом.<br>SlotPolicy(Toolbar) синтезируется trait'ом автоматически.</div>
+          <div class="compare-caption">Оружейные настройки лежат в Trait'е Weapon Setup.<br>Общие свойства приходят из Archetype.</div>
         </div>
       </div>
 
       <div class="callout accent">
         <span class="label">Что произошло</span>
         <p>
-          Trait выбирает <em>какие</em> фрагменты нужны для роли и кладёт их в DA с разумными дефолтами.
-          Дизайнер видит и редактирует фрагменты напрямую, но больше не выбирает из 17 полей,
-          какие применимы для оружия, а какие для обычного предмета. Категории-помойки уходят, остаются
-          только осмысленные для предмета фрагменты.
+          Общая часть (display, slot policy, equip, pickup) пришла из Archetype. Конкретные значения
+          для этого предмета лежат в списке <code>Archetype Traits</code>. Если у оружия появится что-то
+          новое, чего нет в Archetype, — оно добавится в список <code>Traits</code>.
         </p>
       </div>
     </section>
 
     <section id="future">
-      <div class="section-head"><span class="num">03</span><h2><span class="accent">//</span> Куда это растёт</h2></div>
+      <div class="section-head"><span class="num">04</span><h2><span class="accent">//</span> Куда это растёт</h2></div>
 
       <p>
-        Когда подъедут будущие capability — это будут <strong>новые traits</strong>.
-        Они добавятся только в те предметы, где нужны, не трогая остальные. Пример комбинированного
-        предмета будущей волны:
+        Новая возможность добавляется отдельным Trait'ом. Если она нужна всем предметам одного семейства —
+        её место в Archetype. Если нужна только этому предмету — она лежит в локальном списке <code>Traits</code>.
       </p>
 
       <div class="future-mock">
         <div class="panel-head">
-          <span class="label">DA_Item_SpecialSample · Traits</span>
+          <span class="label">DA_Item_SpecialSample · Composition</span>
         </div>
         <div class="trait-row">
-          <span class="name">[0] Trait_BackpackItem</span>
-          <span class="meta">// как лежит и берётся</span>
-          <div class="params">EquippedActor · MeshAttachSocket · AbilitySet</div>
+          <span class="name">Archetype</span>
+          <span class="meta">// общий шаблон семейства</span>
+          <div class="params">Backpack Item</div>
         </div>
         <div class="trait-row">
-          <span class="name">[1] Trait_Scannable</span>
-          <span class="meta">// как виден сканером</span>
-          <div class="params">Stencil · NoiseScale</div>
+          <span class="name">Archetype Traits</span>
+          <span class="meta">// что переопределено локально</span>
+          <div class="params">Display Info · Slot Policy · Equippable · Pickup Actor</div>
         </div>
         <div class="trait-row">
-          <span class="name">[2] Trait_X</span>
-          <span class="meta">// специальная классификация</span>
-          <div class="params">Kind · Severity</div>
+          <span class="name">Traits</span>
+          <span class="meta">// локальные добавления</span>
+          <div class="params">Scannable · Stackable</div>
         </div>
       </div>
 
-      <p class="muted">
-        Три trait'а — три аспекта. Каждый собирается из своих параметров. У обычного предмета никакого
-        <code>Stencil</code> или <code>Severity</code> в детайл-панели не появится — потому что нет такого trait'а.
-      </p>
     </section>
 
     <section id="migration">
-      <div class="section-head"><span class="num">04</span><h2><span class="accent">//</span> Что с существующими предметами</h2></div>
+      <div class="section-head"><span class="num">05</span><h2><span class="accent">//</span> Что с существующими предметами</h2></div>
 
       <div class="callout good">
         <span class="label">TL;DR для дизайнеров</span>
-        <p>Ничего делать не надо. Открыл предмет в editor — он уже в новом виде. Сохранил — формат закрепился.</p>
+        <p>Ничего делать не надо. Открыл предмет в редакторе — он уже в новом виде. Сохранил — формат закрепился.</p>
       </div>
 
       <p class="muted">
-        Все существующие Item Data Asset мигрируются автоматически на загрузке. Сейв-формат игры,
-        BP-классы предметов, иконки и меши — без изменений.
+        Старые поля разъезжаются по <code>Archetype Traits</code> и <code>Traits</code> автоматически при загрузке ассета.
       </p>
     </section>
 
     <section id="faq">
-      <div class="section-head"><span class="num">05</span><h2><span class="accent">//</span> FAQ</h2></div>
+      <div class="section-head"><span class="num">06</span><h2><span class="accent">//</span> FAQ</h2></div>
 
       <details>
-        <summary>А если нужно для одного предмета своё поведение, которого нет в trait'е?</summary>
+        <summary>Я работаю с предметом из Blueprint — что я там вижу?</summary>
         <div class="answer">
-          У каждого фрагмента внутри trait'а есть свои поля — правишь их прямо в DA. Если нужного фрагмента
-          вообще нет в trait'е (например, добавить ApplyEffectOnAdd к обычному предмету), есть два пути:
-          добавить фрагмент в дефолт trait-класса (применимо, если вариация осмысленна и для других предметов),
-          либо создать новый trait-наследник в Blueprint с расширенным набором фрагментов.
+          Fragments. В редакторе ты заполняешь поля Fragments внутри Trait; из Blueprint те же
+          Fragments читаются напрямую. Используй ноду <strong>Get Item Fragment</strong> и выбери на пине
+          нужный Fragment (Display Info, Equippable, Slot Policy и т.д.).
+        </div>
+      </details>
+
+      <details>
+        <summary>А если для одного предмета нужно своё поведение, которого нет в Archetype?</summary>
+        <div class="answer">
+          Если это вариация уже унаследованного Trait'а — правь его в списке <code>Archetype Traits</code>.
+          Если это новая независимая возможность — добавь отдельный Trait в список <code>Traits</code>.
         </div>
       </details>
 
@@ -680,16 +782,22 @@
       </details>
 
       <details>
-        <summary>Можно ли продолжать создавать предметы по-старому, пока миграция не закончена?</summary>
-        <div class="answer">Да. Новые предметы тоже автоматически попадут в новую модель на следующей загрузке.</div>
+        <summary>Почему два списка: Archetype Traits и Traits?</summary>
+        <div class="answer">
+          <code>Archetype Traits</code> — это локальные копии Traits, унаследованных от Archetype: у каждой есть
+          значение из родителя, и её можно сбросить обратно к нему. <code>Traits</code> — только локальные добавления.
+          Trait того же класса, что уже есть в Archetype, должен лежать в <code>Archetype Traits</code> как переопределение,
+          а не в <code>Traits</code> как новый.
+        </div>
       </details>
 
       <details>
-        <summary>Почему не сделать просто разные подклассы Item Data Asset?</summary>
+        <summary>Почему не сделать просто разные подклассы ItemDataAsset?</summary>
         <div class="answer">
-          Способности ортогональны: один предмет может быть одновременно обычным, сканируемым, особым и квест-item'ом.
-          Подклассы — это однонаследная иерархия, которая не выражает «и то, и это, и третье».
-          Traits — это «и то, и это» через композицию.
+          Возможности ортогональны: один предмет может быть одновременно обычным предметом инвентаря,
+          stackable, scannable и чем-то ещё специальным. Подклассы — это одинарная иерархия наследования,
+          в которой «и то, и это, и третье» не выражается. Traits и Archetypes дают композицию и
+          наследуемые значения по умолчанию, не раздувая ассет неактуальными полями.
         </div>
       </details>
 
@@ -700,8 +808,8 @@
     </section>
 
     <footer>
-      <span class="sig">Tech Note · 2026-05-18</span>
-      <span>ITM-001 · REV 03</span>
+      <span class="sig">Tech Note · 2026-05-20</span>
+      <span>ITM-001 · REV 04</span>
     </footer>
 
   </main>
