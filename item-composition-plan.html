@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Modular Items Guide</title>
+<title>Модульные предметы</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -537,15 +537,15 @@
 
 <div class="topbar">
   <div class="frame row">
-    <div><span class="status-dot"></span>Modular Items Guide</div>
-    <nav class="nav" aria-label="Page navigation">
-      <a href="#tldr">TL;DR</a>
-      <a href="#setup">Setup</a>
-      <a href="#upgrade">Upgrade</a>
-      <a href="#examples">Examples</a>
-      <a href="#rules">Rules</a>
-      <a href="#faq">FAQ</a>
-      <a href="#appendix">Appendix</a>
+    <div><span class="status-dot"></span>Модульные предметы</div>
+    <nav class="nav" aria-label="Навигация">
+      <a href="#summary">Коротко</a>
+      <a href="#why">Зачем</a>
+      <a href="#when">Когда</a>
+      <a href="#scanner">Сканер</a>
+      <a href="#upgrade">Апгрейд</a>
+      <a href="#decisions">Решения</a>
+      <a href="#faq">Вопросы</a>
     </nav>
   </div>
 </div>
@@ -553,394 +553,252 @@
 <main class="frame">
   <header class="hero">
     <div>
-      <div class="stamp">Designer-facing spec / updated 2026-05-26</div>
-      <h1>Modular <span class="accent">Items</span></h1>
+      <div class="stamp">Документ для дизайнеров / 2026-05-26</div>
+      <h1>Модульные <span class="accent">предметы</span></h1>
       <p class="lede">
-        Эта страница объясняет модульные предметы без необходимости читать код. Главная идея простая:
-        апгрейд, attachment или компонент - это обычный предмет, установленный в слот другого предмета.
-        Дизайнер настраивает слоты, модули и награды в редакторе; runtime хранит результат как состояние конкретного экземпляра предмета.
+        Модульные предметы нужны, чтобы апгрейды, обвесы и сменные части настраивались как контент,
+        а не как отдельная логика под каждый случай. Предмет может иметь слоты, а в эти слоты устанавливаются другие предметы.
       </p>
-      <div id="tldr" class="callout good">
-        <div class="bar"></div>
-        <div class="content">
-          <div class="label">TL;DR</div>
-          <ul class="clean">
-            <li>Host item declares named slots: Sensor, Lens, Optic, Trigger.</li>
-            <li>Module item is a normal item that can be installed into one of those slots.</li>
-            <li>Designer sets slot rules on the host and tags on module items.</li>
-            <li>Upgrade reward creates or grants a module item and installs it into the selected slot.</li>
-            <li>The result is saved on the concrete item instance, not only as an external purchase flag.</li>
-          </ul>
-        </div>
-      </div>
     </div>
-    <aside class="hero-panel" aria-label="Status summary">
-      <div class="head"><span>Read this as</span><span>Glossary</span></div>
+    <aside class="hero-panel" aria-label="Основные понятия">
+      <div class="head"><span>Три слова</span><span>Смысл</span></div>
       <div class="body">
-        <div class="metric"><span class="k">Host</span><span class="v ok">item being modified</span></div>
-        <div class="metric"><span class="k">Slot</span><span class="v ok">named place on host</span></div>
-        <div class="metric"><span class="k">Module</span><span class="v ok">item inside slot</span></div>
-        <div class="metric"><span class="k">Upgrade</span><span class="v ok">grant module + install</span></div>
-        <div class="metric"><span class="k">Save</span><span class="v">stored on item instance</span></div>
+        <div class="metric"><span class="k">Носитель</span><span class="v ok">предмет, который улучшаем</span></div>
+        <div class="metric"><span class="k">Слот</span><span class="v ok">место для модуля</span></div>
+        <div class="metric"><span class="k">Модуль</span><span class="v ok">предмет, который ставим</span></div>
+        <div class="metric"><span class="k">Апгрейд</span><span class="v">может выдать модуль</span></div>
+        <div class="metric"><span class="k">Результат</span><span class="v">хранится на предмете</span></div>
       </div>
     </aside>
   </header>
 
-  <section id="start">
-    <div class="section-head"><span class="num">00</span><h2>Start <span class="accent">Here</span></h2></div>
+  <section id="summary">
+    <div class="section-head"><span class="num">00</span><h2>Коротко</h2></div>
     <div class="callout good">
       <div class="bar"></div>
       <div class="content">
-        <div class="label">One sentence</div>
-        <p>
-          Модульный предмет - это предмет, который может содержать другие предметы в заранее названных слотах.
-        </p>
-        <p class="muted">
-          Например, улучшенный сканер - это не "сканер плюс купленный флаг". Это конкретный сканер, в котором установлен
-          конкретный sensor module. Оружие с прицелом работает так же: weapon item содержит optic module.
-        </p>
-      </div>
-    </div>
-
-    <div class="cards three">
-      <article class="card accent">
-        <div class="eyebrow">Host item</div>
-        <h3>Что улучшаем</h3>
-        <p class="muted">Сканер, оружие, броня, контейнер или другой предмет, у которого есть слоты для модулей.</p>
-      </article>
-      <article class="card good">
-        <div class="eyebrow">Module item</div>
-        <h3>Что устанавливаем</h3>
-        <p class="muted">Модуль тоже является предметом: sensor, lens, optic, barrel, trigger, battery, upgrade chip.</p>
-      </article>
-      <article class="card warn">
-        <div class="eyebrow">Slot</div>
-        <h3>Куда ставим</h3>
-        <p class="muted">Слот - это именованное поле вроде Sensor, Lens, Optic или Trigger. В редакторе он выбирается из picker-а.</p>
-      </article>
-    </div>
-
-    <div class="diagram" style="margin-top: 18px;">
-      <div class="diagram-title"><span>Mental model</span><span>designer view</span></div>
-      <div class="flow">
-        <div class="node">
-          <div class="title">Scanner item</div>
-          <div class="sub">Has slots: Sensor, Lens, Processor.</div>
-        </div>
-        <div class="arrow">--&gt;</div>
-        <div class="node">
-          <div class="title">Sensor slot</div>
-          <div class="sub">Allows items tagged as sensor modules.</div>
-        </div>
-        <div class="arrow">--&gt;</div>
-        <div class="node">
-          <div class="title">Advanced sensor</div>
-          <div class="sub">A module item installed by an upgrade reward.</div>
-        </div>
+        <div class="label">Главное</div>
+        <ul class="clean">
+          <li>Если изменение должно принадлежать конкретному предмету, делаем его модулем.</li>
+          <li>Сканер, оружие или другой предмет-носитель объявляет слоты: Sensor, Lens, Optic, Barrel.</li>
+          <li>Модуль создается как обычный <code>Item Data Asset</code>: с именем, иконкой, тегами и геймплейными настройками.</li>
+          <li>Апгрейд может использовать <code>Install Item Module</code>: выбрать предмет-носитель, слот и модуль.</li>
+          <li>После этого состояние живет на конкретном предмете: "этот сканер имеет улучшенный сенсор", а не только "игрок купил апгрейд".</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <section id="setup">
-    <div class="section-head"><span class="num">01</span><h2>Setting Up <span class="accent">A Modular Item</span></h2></div>
-    <p class="muted">
-      Дизайнерская работа делится на две части: у host item объявить слоты, а у module item поставить tags, которые позволяют ему встать
-      в нужный слот. Runtime logic в fragments не пишется.
-    </p>
-
-    <div class="timeline" style="margin-top: 20px;">
-      <article class="phase done">
-        <div class="tag">Step 1</div>
-        <div>
-          <h3>Choose the host item</h3>
-          <p class="muted">
-            Это предмет, который будет получать модули: scanner, weapon, armor, backpack, device. У него должен быть обычный item data asset.
-          </p>
-        </div>
+  <section id="why">
+    <div class="section-head"><span class="num">01</span><h2>Что это дает дизайну</h2></div>
+    <div class="cards three">
+      <article class="card good">
+        <div class="eyebrow">Один подход</div>
+        <h3>Сканеры, оружие, экипировка</h3>
+        <p class="muted">Одна и та же модель подходит для сенсора сканера, прицела на оружии, сменного ствола или будущих частей экипировки.</p>
       </article>
-      <article class="phase done">
-        <div class="tag">Step 2</div>
-        <div>
-          <h3>Add a slots fragment</h3>
-          <p class="muted">
-            Для сканера это может быть Scanner Module Slots. Для оружия - Weapon Module Slots. Fragment содержит именованные поля,
-            которые дизайнер видит как нормальные настройки.
-          </p>
-        </div>
+      <article class="card accent">
+        <div class="eyebrow">Переиспользование</div>
+        <h3>Модуль можно выдать разными способами</h3>
+        <p class="muted">Один модуль может приходить из апгрейда, лута, крафта, награды за квест или начальной комплектации предмета.</p>
       </article>
-      <article class="phase done">
-        <div class="tag">Step 3</div>
-        <div>
-          <h3>Set slot rules</h3>
-          <p class="muted">
-            У каждого слота можно указать readable name и required item tags. Если слот требует <code>Module.Sensor</code>,
-            то item без этого tag не установится.
-          </p>
-        </div>
-      </article>
-      <article class="phase done">
-        <div class="tag">Step 4</div>
-        <div>
-          <h3>Create module items</h3>
-          <p class="muted">
-            Каждый модуль - отдельный item data asset. Он получает display, icon, gameplay data и tags, которые подходят нужному слоту.
-          </p>
-        </div>
+      <article class="card warn">
+        <div class="eyebrow">Понятное состояние</div>
+        <h3>Видно, что стоит в предмете</h3>
+        <p class="muted">Тестирование, отладка и будущий интерфейс могут смотреть на сам предмет: какие модули установлены, какие пустые слоты остались.</p>
       </article>
     </div>
+  </section>
+
+  <section id="when">
+    <div class="section-head"><span class="num">02</span><h2>Когда использовать</h2></div>
+    <div class="table">
+      <div class="tr header"><div class="td">Задача</div><div class="td">Что использовать</div></div>
+      <div class="tr">
+        <div class="td">Улучшение должно принадлежать конкретному экземпляру предмета</div>
+        <div class="td">Модуль: предмет-носитель получает слот, апгрейд устанавливает туда модуль.</div>
+      </div>
+      <div class="tr">
+        <div class="td">Изменение глобальное для игрока или кампании</div>
+        <div class="td">Обычная глобальная разблокировка. Например, открыть новый рецепт или разрешить покупать новый класс предметов.</div>
+      </div>
+      <div class="tr">
+        <div class="td">Это просто новый предмет в инвентаре</div>
+        <div class="td">Обычный <code>Item Data Asset</code>, без модульных слотов.</div>
+      </div>
+      <div class="tr">
+        <div class="td">Нужны разные варианты одного предмета на старте</div>
+        <div class="td">Можно сделать разные стартовые комплектации: базовый модуль, продвинутый модуль, пустой слот.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scanner">
+    <div class="section-head"><span class="num">03</span><h2>Пример: модульный сканер</h2></div>
+    <p class="muted">
+      Допустим, нужен апгрейд дальности сканера. В старой модели это легко превращается в проверку "куплен ли апгрейд".
+      В модульной модели мы описываем саму часть сканера: улучшенный сенсор.
+    </p>
 
     <div class="cards two" style="margin-top: 20px;">
       <article class="card good">
-        <div class="eyebrow">Host item editor</div>
-        <h3>Scanner slots</h3>
+        <div class="eyebrow">Предмет-носитель</div>
+        <h3>Полевой сканер</h3>
         <div class="editor">
-          <div class="panel-head"><span class="label">Portable Scanner</span><span>Item Data Asset</span></div>
-          <div class="group">Fragments</div>
-          <div class="group">Scanner Module Slots</div>
-          <div class="row"><span class="k">Sensor</span><span class="v pick">Accepts: Module.Sensor</span></div>
-          <div class="row"><span class="k">Lens</span><span class="v pick">Accepts: Module.Lens</span></div>
-          <div class="row"><span class="k">Processor</span><span class="v pick">Accepts: Module.Processor</span></div>
+          <div class="panel-head"><span class="label">Item Data Asset</span><span>сканер</span></div>
+          <div class="group">Слоты модулей сканера</div>
+          <div class="row"><span class="k">Sensor</span><span class="v pick">принимает сенсорные модули</span></div>
+          <div class="row"><span class="k">Lens</span><span class="v pick">принимает линзы</span></div>
+          <div class="row"><span class="k">Processor</span><span class="v pick">принимает процессоры</span></div>
         </div>
-        <p class="muted" style="margin-top: 14px;">
-          Дизайнер видит три явных поля. Это не массив строк и не скрытая таблица.
-        </p>
+        <p class="muted" style="margin-top: 14px;">Сканер задает список мест, куда вообще можно ставить модули.</p>
       </article>
 
       <article class="card accent">
-        <div class="eyebrow">Module item editor</div>
-        <h3>Sensor module</h3>
+        <div class="eyebrow">Модуль</div>
+        <h3>Улучшенный сенсор</h3>
         <div class="editor">
-          <div class="panel-head"><span class="label">Advanced Sensor Mk2</span><span>Item Data Asset</span></div>
-          <div class="group">Fragments</div>
-          <div class="row"><span class="k">Display</span><span class="v">Advanced Sensor Mk2</span></div>
-          <div class="row"><span class="k">Tags</span><span class="v pick">Module.Sensor</span></div>
-          <div class="row"><span class="k">Gameplay</span><span class="v">Better detection range</span></div>
+          <div class="panel-head"><span class="label">Item Data Asset</span><span>модуль</span></div>
+          <div class="group">Отображение</div>
+          <div class="row"><span class="k">Название</span><span class="v">Улучшенный сенсор</span></div>
+          <div class="row"><span class="k">Иконка</span><span class="v">иконка сенсора</span></div>
+          <div class="group">Теги</div>
+          <div class="row"><span class="k">Тип модуля</span><span class="v pick">сенсорный модуль</span></div>
+          <div class="group">Геймплей</div>
+          <div class="row"><span class="k">Эффект</span><span class="v">увеличенная дальность</span></div>
         </div>
-        <p class="muted" style="margin-top: 14px;">
-          Модуль подходит слоту Sensor, потому что у него есть tag, который слот требует.
-        </p>
+        <p class="muted" style="margin-top: 14px;">Модуль описывает, что именно дает улучшение.</p>
       </article>
     </div>
   </section>
 
   <section id="upgrade">
-    <div class="section-head"><span class="num">02</span><h2>Upgrade <span class="accent">Reward</span></h2></div>
-    <div class="callout good">
-      <div class="bar"></div>
-      <div class="content">
-        <div class="label">What an upgrade does</div>
-        <p>
-          Upgrade может купить/получить progression marker, но gameplay change должен приходить от module item, установленного в host item.
-          Поэтому reward authoring использует resource <code>Install Item Module</code>.
-        </p>
-      </div>
-    </div>
-
-    <div class="cards two">
-      <article class="card good">
-        <div class="eyebrow">Reward bundle editor</div>
-        <h3>Install Item Module</h3>
-        <div class="editor">
-          <div class="panel-head"><span class="label">Grant Resources</span><span>Reward Bundle</span></div>
-          <div class="group">Install Item Module</div>
-          <div class="row"><span class="k">Host Query</span><span class="v">Equipped Item</span></div>
-          <div class="row"><span class="k">Target Slot</span><span class="v pick">Scanner Module Slots -> Sensor</span></div>
-          <div class="row"><span class="k">Module Item</span><span class="v">Sensor Upgrade Mk2</span></div>
-          <div class="row"><span class="k">Stack Count</span><span class="v">1</span></div>
-        </div>
-        <p class="muted" style="margin-top: 14px;">
-          Target Slot выбирается picker-ом: сначала fragment со слотами, потом конкретное поле. Ничего не вводится руками строкой.
-        </p>
-      </article>
-      <article class="card warn">
-        <div class="eyebrow">Host Query choices</div>
-        <h3>How the reward finds the host item</h3>
-        <ul class="clean">
-          <li><strong>Equipped Item</strong> - удобно для предмета в руках.</li>
-          <li><strong>Required Tags</strong> - удобно для уникального owned item с понятным role tag.</li>
-          <li><strong>Exact Definition</strong> - безопасно только если у игрока не может быть двух таких предметов.</li>
-          <li><strong>Item Id</strong> - точечный выбор конкретного экземпляра, обычно для специальных случаев.</li>
-        </ul>
-      </article>
-    </div>
+    <div class="section-head"><span class="num">04</span><h2>Как настроить апгрейд</h2></div>
+    <p class="muted">
+      Апгрейд остается частью прогрессии. Разница в том, что награда апгрейда теперь может не только ставить флаг покупки,
+      но и установить модуль в предмет.
+    </p>
 
     <div class="diagram" style="margin-top: 18px;">
-      <div class="diagram-title"><span>Runtime result</span><span>what gets saved</span></div>
+      <div class="diagram-title"><span>Что делает награда</span><span>по шагам</span></div>
       <div class="flow">
         <div class="node">
-          <div class="title">Player buys upgrade</div>
-          <div class="sub">Purchase transaction grants the module resource.</div>
+          <div class="title">Найти предмет</div>
+          <div class="sub">Например, сканер в руках или единственный сканер игрока.</div>
         </div>
         <div class="arrow">--&gt;</div>
         <div class="node">
-          <div class="title">Module is created</div>
-          <div class="sub">A real item instance is created with its own identity.</div>
+          <div class="title">Выбрать слот</div>
+          <div class="sub">Например, Sensor в настройках сканера.</div>
         </div>
         <div class="arrow">--&gt;</div>
         <div class="node">
-          <div class="title">Module is installed</div>
-          <div class="sub">Host item now carries the upgrade in its slot and save state.</div>
+          <div class="title">Установить модуль</div>
+          <div class="sub">Например, улучшенный сенсор.</div>
         </div>
       </div>
+    </div>
+
+    <div class="cards two" style="margin-top: 20px;">
+      <article class="card good">
+        <div class="eyebrow">В редакторе апгрейда</div>
+        <h3><code>Install Item Module</code></h3>
+        <div class="editor">
+          <div class="panel-head"><span class="label">Награды апгрейда</span><span>Grant Resources</span></div>
+          <div class="group">Install Item Module</div>
+          <div class="row"><span class="k">Какой предмет</span><span class="v">предмет в руках</span></div>
+          <div class="row"><span class="k">Слот</span><span class="v pick">слоты сканера -> Sensor</span></div>
+          <div class="row"><span class="k">Модуль</span><span class="v">Улучшенный сенсор</span></div>
+          <div class="row"><span class="k">Количество</span><span class="v">1</span></div>
+        </div>
+      </article>
+      <article class="card warn">
+        <div class="eyebrow">Дизайн-вопрос</div>
+        <h3>Как выбрать предмет-носитель?</h3>
+        <p class="muted">
+          Для апгрейда нужно заранее решить, какой предмет получает модуль: предмет в руках, предмет с нужным тегом,
+          конкретный тип предмета или конкретный экземпляр. Это не техническая деталь, а часть дизайна награды.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section id="decisions">
+    <div class="section-head"><span class="num">05</span><h2>Что решить перед настройкой</h2></div>
+    <div class="cards two">
+      <article class="card">
+        <div class="eyebrow">Слоты</div>
+        <h3>Какие места есть у предмета?</h3>
+        <p class="muted">Для сканера это может быть Sensor, Lens, Processor. Для оружия - Optic, Barrel, Trigger.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Модули</div>
+        <h3>Какие части можно поставить?</h3>
+        <p class="muted">Нужны ли только прямые улучшения, альтернативные варианты, редкие версии, поврежденные версии?</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Источник</div>
+        <h3>Откуда игрок получает модуль?</h3>
+        <p class="muted">Апгрейд, магазин, лут, крафт, квест, стартовая комплектация - это разные способы выдать один и тот же модуль.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Замена</div>
+        <h3>Можно ли снять или заменить модуль?</h3>
+        <p class="muted">Если да, нужно продумать интерфейс, цену, ограничения и что происходит со снятым модулем.</p>
+      </article>
     </div>
   </section>
 
   <section id="examples">
-    <div class="section-head"><span class="num">03</span><h2>Concrete <span class="accent">Examples</span></h2></div>
-    <div class="cards two" style="margin-top: 18px;">
-      <article class="card">
-        <div class="eyebrow">Scanner</div>
-        <h3>Sensor upgrade</h3>
-        <p class="muted">
-          Host item: Portable Scanner. Slot: Sensor. Module item: Advanced Sensor Mk2. Reward: install Advanced Sensor Mk2 into the scanner's Sensor slot.
-          Scanner gameplay reads the installed sensor module to decide detection behavior.
-        </p>
-        <div class="chips">
-          <span class="chip accent">Scanner</span>
-          <span class="chip good">Sensor Module</span>
-          <span class="chip warn">Lens Module</span>
-        </div>
+    <div class="section-head"><span class="num">06</span><h2>Еще примеры</h2></div>
+    <div class="cards three">
+      <article class="card accent">
+        <div class="eyebrow">Оружие</div>
+        <h3>Прицел</h3>
+        <p class="muted">Оружие имеет слот Optic. Прицел - отдельный модуль, который может менять зум, интерфейс, точность или визуал.</p>
       </article>
-      <article class="card">
-        <div class="eyebrow">Weapon</div>
-        <h3>Optic attachment</h3>
-        <p class="muted">
-          Host item: Modular Weapon. Slot: Optic. Module item: Compact Reflex Sight. Reward, loot or crafting can install the optic.
-          If the weapon is dropped, saved or moved, the installed optic travels with that specific weapon instance.
-        </p>
-        <div class="chips">
-          <span class="chip accent">Weapon</span>
-          <span class="chip good">Optic</span>
-          <span class="chip good">Muzzle</span>
-          <span class="chip good">Trigger</span>
-        </div>
+      <article class="card good">
+        <div class="eyebrow">Инструмент</div>
+        <h3>Батарея</h3>
+        <p class="muted">Инструмент имеет слот "Силовой элемент". Разные батареи могут менять время работы или доступные режимы.</p>
       </article>
-    </div>
-  </section>
-
-  <section id="rules">
-    <div class="section-head"><span class="num">04</span><h2>Authoring <span class="accent">Rules</span></h2></div>
-    <div class="table">
-      <div class="tr header"><div class="td">Do</div><div class="td">Why</div></div>
-      <div class="tr"><div class="td">Make upgrades as module items</div><div class="td">The upgraded state belongs to the concrete item instance, so it saves, moves and debugs naturally.</div></div>
-      <div class="tr"><div class="td">Choose slots from picker</div><div class="td">Picker points to a real slot field. Raw strings can silently break after renames.</div></div>
-      <div class="tr"><div class="td">Use clear module tags</div><div class="td">Slot validation is easy to read: Sensor slot requires Module.Sensor, optic slot requires Module.Optic.</div></div>
-      <div class="tr"><div class="td">Make host queries unambiguous</div><div class="td">If an upgrade can match two owned items, content should narrow the query or change the reward design.</div></div>
-      <div class="tr"><div class="td">Keep fragments data-only</div><div class="td">Fragments describe slots and constraints. Installation logic stays in the shared system.</div></div>
-    </div>
-
-    <div class="callout danger">
-      <div class="bar"></div>
-      <div class="content">
-        <div class="label">Avoid</div>
-        <p>
-          Do not model a scanner upgrade only as <code>IsPurchased(Upgrade.ScannerRange2)</code> inside gameplay code.
-          The upgrade can still have a progression marker, but the item's actual capability should come from the installed module item.
-        </p>
-      </div>
+      <article class="card warn">
+        <div class="eyebrow">Экипировка</div>
+        <h3>Пластина брони</h3>
+        <p class="muted">Броня имеет слот "Пластина". Пластина может давать защиту, вес, штрафы или сопротивления.</p>
+      </article>
     </div>
   </section>
 
   <section id="faq">
-    <div class="section-head"><span class="num">05</span><h2>FAQ <span class="accent">For Designers</span></h2></div>
+    <div class="section-head"><span class="num">07</span><h2>Вопросы</h2></div>
     <div class="cards two">
       <article class="card">
-        <div class="eyebrow">Question</div>
-        <h3>Is a module different from an item?</h3>
-        <p class="muted">No. A module is an item used in a module slot. It can have display data, tags, gameplay data and save state like other items.</p>
+        <div class="eyebrow">Вопрос</div>
+        <h3>Модуль - это отдельный тип ассета?</h3>
+        <p class="muted">Нет. Это обычный <code>Item Data Asset</code>, который используется как часть другого предмета.</p>
       </article>
       <article class="card">
-        <div class="eyebrow">Question</div>
-        <h3>Does the module stay with the item?</h3>
-        <p class="muted">Yes. If a weapon has an optic installed, that optic belongs to that weapon instance's state. Moving or saving the weapon keeps its installed modules.</p>
+        <div class="eyebrow">Вопрос</div>
+        <h3>Апгрейды через прогрессию больше не нужны?</h3>
+        <p class="muted">Нужны. Прогрессия решает, когда игрок получает награду. Модуль описывает, что именно меняется в предмете.</p>
       </article>
       <article class="card">
-        <div class="eyebrow">Question</div>
-        <h3>Can modules be removed or swapped?</h3>
-        <p class="muted">The architecture supports install/remove/swap as item slot operations. Specific UI, economy and balance rules are separate feature decisions.</p>
+        <div class="eyebrow">Вопрос</div>
+        <h3>Можно ли модуль выдать не апгрейдом?</h3>
+        <p class="muted">Да. Если модуль является предметом, его можно использовать в луте, магазине, крафте или квестовой награде.</p>
       </article>
       <article class="card">
-        <div class="eyebrow">Question</div>
-        <h3>What if the reward finds several matching items?</h3>
-        <p class="muted">That should fail. A reward must target one clear host item, otherwise the player could get a module installed into the wrong thing.</p>
+        <div class="eyebrow">Вопрос</div>
+        <h3>Что если у игрока два подходящих предмета?</h3>
+        <p class="muted">Это нужно решить в дизайне награды: улучшать предмет в руках, конкретный предмет, или дать игроку выбрать через отдельный интерфейс.</p>
       </article>
-      <article class="card">
-        <div class="eyebrow">Question</div>
-        <h3>Why not keep this as traits only?</h3>
-        <p class="muted">Traits describe item type and allowed behavior. Installed modules are runtime state of one concrete item instance.</p>
-      </article>
-      <article class="card">
-        <div class="eyebrow">Question</div>
-        <h3>Are purchase tags still useful?</h3>
-        <p class="muted">Yes, for progression history and unlock checks. They should not be the only source of item capability when a concrete module can represent that capability.</p>
-      </article>
-    </div>
-  </section>
-
-  <section id="appendix">
-    <div class="section-head"><span class="num">06</span><h2>Technical <span class="accent">Appendix</span></h2></div>
-    <p class="muted">
-      This section is for programmers and technical designers. It is not required to author ordinary modular items.
-    </p>
-
-    <div class="cards two" style="margin-top: 18px;">
-      <article class="card good">
-        <div class="eyebrow">Slot identity</div>
-<pre><code>FItemSlotId =
-    FragmentClass
-    PropertyName</code></pre>
-        <p class="muted" style="margin-top: 12px;">
-          The editor shows this as "choose slot fragment, then choose slot field".
-        </p>
-      </article>
-      <article class="card good">
-        <div class="eyebrow">Slot declaration</div>
-<pre><code>FItemSlotSpec =
-    DisplayName
-    RequiredItemTags
-    bAllowEmpty</code></pre>
-        <p class="muted" style="margin-top: 12px;">
-          The spec is data. Validation reads it; the spec itself does not perform logic.
-        </p>
-      </article>
-    </div>
-
-    <div class="cards two" style="margin-top: 16px;">
-      <article class="card accent">
-        <div class="eyebrow">Runtime state</div>
-<pre><code>FItemInstanceSlot =
-    SlotId
-    Installed item instance
-    Installed item save blob</code></pre>
-        <p class="muted" style="margin-top: 12px;">
-          The host item stores installed module state recursively.
-        </p>
-      </article>
-      <article class="card warn">
-        <div class="eyebrow">Review topics</div>
-        <ul class="clean">
-          <li>Final human-readable item id format.</li>
-          <li>Unloaded map and unloaded holder lookup.</li>
-          <li>Field rename migration for saved slot ids.</li>
-          <li>Long-term move of instance state into registry records.</li>
-        </ul>
-      </article>
-    </div>
-
-    <div class="table" style="margin-top: 18px;">
-      <div class="tr header"><div class="td">Term</div><div class="td">Plain definition</div></div>
-      <div class="tr"><div class="td">Host item</div><div class="td">The item that owns slots and receives modules.</div></div>
-      <div class="tr"><div class="td">Module item</div><div class="td">A normal item instance installed into a host item's slot.</div></div>
-      <div class="tr"><div class="td">Slot spec</div><div class="td">Data-only field that declares a slot and its constraints.</div></div>
-      <div class="tr"><div class="td">Grant resource</div><div class="td">Progression reward operation, such as creating and installing a module item.</div></div>
-      <div class="tr"><div class="td">Registry</div><div class="td">Identity and metadata catalog. Not an inventory and not a location cache.</div></div>
-      <div class="tr"><div class="td">Slot subsystem</div><div class="td">Shared runtime system that validates and moves loaded item instances between loaded slots.</div></div>
     </div>
   </section>
 </main>
 
 <footer class="footer">
-  <div class="frame">Modular Items Guide / public-safe designer-facing spec / updated 2026-05-26</div>
+  <div class="frame">Модульные предметы / документ для дизайнеров / черновик 2026-05-26</div>
 </footer>
 </body>
 </html>
