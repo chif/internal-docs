@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modular Items Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05070b;
+    --bg-2: #080c12;
+    --panel: #0c121b;
+    --panel-2: #101925;
+    --panel-3: #172232;
+    --code: #03060a;
+    --line: #1c2a3d;
+    --line-soft: #121b28;
+    --line-hard: #2a3d55;
+    --text: #d8e0e8;
+    --muted: #94a2b2;
+    --faint: #617083;
+    --dim: #3c4654;
+    --accent: #5fc3e8;
+    --accent-2: #76d8b4;
+    --accent-3: #e8c65d;
+    --danger: #ee6b5d;
+    --purple: #b798ff;
+    --accent-soft: rgba(95, 195, 232, 0.12);
+    --good-soft: rgba(118, 216, 180, 0.10);
+    --warn-soft: rgba(232, 198, 93, 0.10);
+    --danger-soft: rgba(238, 107, 93, 0.10);
+    --shadow: 0 18px 60px rgba(0, 0, 0, 0.42);
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 14% 4%, rgba(95, 195, 232, 0.12) 0%, transparent 36%),
+      radial-gradient(ellipse at 88% 16%, rgba(118, 216, 180, 0.08) 0%, transparent 32%),
+      linear-gradient(180deg, #070a10 0%, var(--bg) 36%, #030509 100%);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    background:
+      repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(143, 217, 240, 0.018) 2px, rgba(143, 217, 240, 0.018) 3px),
+      linear-gradient(90deg, rgba(95,195,232,0.025), transparent 18%, transparent 82%, rgba(238,107,93,0.025));
+  }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted rgba(95, 195, 232, 0.45); }
+  a:hover { color: var(--accent-2); border-bottom-color: var(--accent-2); }
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    color: #a7e7ff;
+    background: var(--code);
+    border: 1px solid var(--line-soft);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  pre {
+    margin: 0;
+    overflow: auto;
+    background: var(--code);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px;
+    color: #cde8f5;
+    line-height: 1.45;
+  }
+  pre code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+  }
+  ::selection { background: var(--accent); color: #031018; }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.6;
+    background-image:
+      linear-gradient(rgba(95,195,232,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(95,195,232,0.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse at center, black 0%, rgba(0,0,0,0.8) 48%, transparent 78%);
+  }
+  .frame {
+    width: min(1120px, calc(100% - 40px));
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(16px);
+    background: rgba(5, 7, 11, 0.86);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 12px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 10px rgba(118,216,180,0.8);
+    vertical-align: 0;
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  .nav a {
+    color: var(--faint);
+    border: 0;
+  }
+  .nav a:hover { color: var(--text); }
+
+  main { padding: 72px 0 96px; }
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 44px;
+    align-items: start;
+    margin-bottom: 76px;
+  }
+  @media (max-width: 920px) {
+    .hero { grid-template-columns: 1fr; }
+  }
+  .stamp {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  h1 {
+    margin: 0 0 22px;
+    font-family: var(--mono);
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1.03;
+    letter-spacing: -0.045em;
+  }
+  h1 .accent { color: var(--accent); }
+  .lede {
+    max-width: 720px;
+    color: var(--muted);
+    font-size: 19px;
+    line-height: 1.58;
+    margin: 0;
+  }
+  .hero-panel {
+    border: 1px solid var(--line-hard);
+    background:
+      linear-gradient(180deg, rgba(95,195,232,0.08), transparent 40%),
+      var(--panel);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .hero-panel .head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .hero-panel .head span:first-child { color: var(--accent); font-weight: 700; }
+  .hero-panel .body { padding: 18px; }
+  .metric {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .metric:last-child { border-bottom: 0; }
+  .metric .k { color: var(--faint); }
+  .metric .v { color: var(--text); }
+  .metric .ok { color: var(--accent-2); }
+  .metric .warn { color: var(--accent-3); }
+
+  section { margin-bottom: 78px; scroll-margin-top: 76px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .section-head .num {
+    font-family: var(--mono);
+    color: var(--faint);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+  h2 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h2 .accent { color: var(--accent); }
+  h3 {
+    margin: 0 0 10px;
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  p { margin: 0 0 14px; }
+  .muted { color: var(--muted); }
+  .small { color: var(--faint); font-size: 13px; }
+
+  .callout {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    gap: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(12, 18, 27, 0.72);
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .callout .bar { background: var(--accent); }
+  .callout.good .bar { background: var(--accent-2); }
+  .callout.warn .bar { background: var(--accent-3); }
+  .callout.danger .bar { background: var(--danger); }
+  .callout .content { padding: 17px 18px 17px 0; }
+  .callout .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .callout.good .label { color: var(--accent-2); }
+  .callout.warn .label { color: var(--accent-3); }
+  .callout.danger .label { color: var(--danger); }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 900px) {
+    .cards,
+    .cards.two { grid-template-columns: 1fr; }
+  }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.018), transparent), rgba(12, 18, 27, 0.86);
+    padding: 18px;
+    min-height: 100%;
+  }
+  .card .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 10px;
+  }
+  .card.good { border-top: 2px solid var(--accent-2); }
+  .card.warn { border-top: 2px solid var(--accent-3); }
+  .card.danger { border-top: 2px solid var(--danger); }
+  .card.accent { border-top: 2px solid var(--accent); }
+
+  .diagram {
+    border: 1px solid var(--line-hard);
+    border-radius: 8px;
+    background:
+      linear-gradient(rgba(95,195,232,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(95,195,232,0.035) 1px, transparent 1px),
+      rgba(7, 12, 18, 0.94);
+    background-size: 28px 28px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .diagram-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: stretch;
+    gap: 12px;
+  }
+  @media (max-width: 850px) {
+    .flow { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); justify-self: center; }
+  }
+  .node {
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: rgba(12, 18, 27, 0.94);
+    padding: 15px;
+  }
+  .node .title {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .node .sub { color: var(--muted); font-size: 14px; }
+  .arrow {
+    display: grid;
+    place-items: center;
+    color: var(--accent-3);
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+
+  .editor {
+    background: var(--panel-2);
+    border: 1px solid var(--line-hard);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 12px;
+    box-shadow: var(--shadow);
+  }
+  .editor .panel-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 13px;
+    background: var(--panel-3);
+    border-bottom: 1px solid var(--line-hard);
+  }
+  .editor .panel-head .label {
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .editor .group {
+    padding: 8px 13px;
+    background: linear-gradient(180deg, #222d3a, #1a2430);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid #0b1018;
+    color: #d7dee6;
+  }
+  .editor .row {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 12px;
+    padding: 8px 13px;
+    background: #0b1420;
+    border-bottom: 1px solid #101b29;
+  }
+  .editor .row:last-child { border-bottom: 0; }
+  .editor .row .k { color: var(--faint); }
+  .editor .row .v { color: var(--text); }
+  .editor .row .pick { color: var(--accent-2); }
+  .editor .row .risk { color: var(--danger); }
+
+  .timeline {
+    position: relative;
+    display: grid;
+    gap: 14px;
+  }
+  .phase {
+    display: grid;
+    grid-template-columns: 94px 1fr;
+    gap: 16px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(12, 18, 27, 0.76);
+    padding: 16px;
+  }
+  @media (max-width: 680px) {
+    .phase { grid-template-columns: 1fr; }
+  }
+  .phase .tag {
+    justify-self: start;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--accent);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: 800;
+  }
+  .phase.done .tag { background: var(--accent-2); }
+  .phase.next .tag { background: var(--accent-3); }
+  .phase.later .tag { background: var(--purple); }
+  .phase h3 { margin-bottom: 6px; }
+
+  .table {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(12, 18, 27, 0.76);
+  }
+  .tr {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .tr:last-child { border-bottom: 0; }
+  .tr.header {
+    background: var(--panel-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .td {
+    padding: 12px 14px;
+    border-right: 1px solid var(--line-soft);
+  }
+  .td:last-child { border-right: 0; }
+  @media (max-width: 760px) {
+    .tr { grid-template-columns: 1fr; }
+    .td { border-right: 0; }
+    .tr.header { display: none; }
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--line-hard);
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(0,0,0,0.18);
+  }
+  .chip.good { color: var(--accent-2); border-color: rgba(118,216,180,0.35); background: var(--good-soft); }
+  .chip.warn { color: var(--accent-3); border-color: rgba(232,198,93,0.35); background: var(--warn-soft); }
+  .chip.danger { color: var(--danger); border-color: rgba(238,107,93,0.35); background: var(--danger-soft); }
+  .chip.accent { color: var(--accent); border-color: rgba(95,195,232,0.35); background: var(--accent-soft); }
+
+  ul.clean {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+  ul.clean li {
+    position: relative;
+    padding-left: 20px;
+  }
+  ul.clean li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.78em;
+    width: 7px;
+    height: 7px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(95,195,232,0.5);
+  }
+
+  .footer {
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid var(--line);
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 24px 0 36px;
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="topbar">
+  <div class="frame row">
+    <div><span class="status-dot"></span>Modular Items Guide</div>
+    <nav class="nav" aria-label="Page navigation">
+      <a href="#start">Start</a>
+      <a href="#setup">Setup</a>
+      <a href="#upgrade">Upgrade</a>
+      <a href="#examples">Examples</a>
+      <a href="#rules">Rules</a>
+      <a href="#faq">FAQ</a>
+      <a href="#appendix">Appendix</a>
+    </nav>
+  </div>
+</div>
+
+<main class="frame">
+  <header class="hero">
+    <div>
+      <div class="stamp">Designer-facing spec / updated 2026-05-26</div>
+      <h1>Modular <span class="accent">Items</span></h1>
+      <p class="lede">
+        Эта страница объясняет модульные предметы без необходимости читать код. Главная идея простая:
+        апгрейд, attachment или компонент - это обычный предмет, установленный в слот другого предмета.
+        Дизайнер настраивает слоты, модули и награды в редакторе; runtime хранит результат как состояние конкретного экземпляра предмета.
+      </p>
+    </div>
+    <aside class="hero-panel" aria-label="Status summary">
+      <div class="head"><span>Read this as</span><span>Glossary</span></div>
+      <div class="body">
+        <div class="metric"><span class="k">Host</span><span class="v ok">item being modified</span></div>
+        <div class="metric"><span class="k">Slot</span><span class="v ok">named place on host</span></div>
+        <div class="metric"><span class="k">Module</span><span class="v ok">item inside slot</span></div>
+        <div class="metric"><span class="k">Upgrade</span><span class="v ok">grant module + install</span></div>
+        <div class="metric"><span class="k">Save</span><span class="v">stored on item instance</span></div>
+      </div>
+    </aside>
+  </header>
+
+  <section id="start">
+    <div class="section-head"><span class="num">00</span><h2>Start <span class="accent">Here</span></h2></div>
+    <div class="callout good">
+      <div class="bar"></div>
+      <div class="content">
+        <div class="label">One sentence</div>
+        <p>
+          Модульный предмет - это предмет, который может содержать другие предметы в заранее названных слотах.
+        </p>
+        <p class="muted">
+          Например, улучшенный сканер - это не "сканер плюс купленный флаг". Это конкретный сканер, в котором установлен
+          конкретный sensor module. Оружие с прицелом работает так же: weapon item содержит optic module.
+        </p>
+      </div>
+    </div>
+
+    <div class="cards three">
+      <article class="card accent">
+        <div class="eyebrow">Host item</div>
+        <h3>Что улучшаем</h3>
+        <p class="muted">Сканер, оружие, броня, контейнер или другой предмет, у которого есть слоты для модулей.</p>
+      </article>
+      <article class="card good">
+        <div class="eyebrow">Module item</div>
+        <h3>Что устанавливаем</h3>
+        <p class="muted">Модуль тоже является предметом: sensor, lens, optic, barrel, trigger, battery, upgrade chip.</p>
+      </article>
+      <article class="card warn">
+        <div class="eyebrow">Slot</div>
+        <h3>Куда ставим</h3>
+        <p class="muted">Слот - это именованное поле вроде Sensor, Lens, Optic или Trigger. В редакторе он выбирается из picker-а.</p>
+      </article>
+    </div>
+
+    <div class="diagram" style="margin-top: 18px;">
+      <div class="diagram-title"><span>Mental model</span><span>designer view</span></div>
+      <div class="flow">
+        <div class="node">
+          <div class="title">Scanner item</div>
+          <div class="sub">Has slots: Sensor, Lens, Processor.</div>
+        </div>
+        <div class="arrow">--&gt;</div>
+        <div class="node">
+          <div class="title">Sensor slot</div>
+          <div class="sub">Allows items tagged as sensor modules.</div>
+        </div>
+        <div class="arrow">--&gt;</div>
+        <div class="node">
+          <div class="title">Advanced sensor</div>
+          <div class="sub">A module item installed by an upgrade reward.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="section-head"><span class="num">01</span><h2>Setting Up <span class="accent">A Modular Item</span></h2></div>
+    <p class="muted">
+      Дизайнерская работа делится на две части: у host item объявить слоты, а у module item поставить tags, которые позволяют ему встать
+      в нужный слот. Runtime logic в fragments не пишется.
+    </p>
+
+    <div class="timeline" style="margin-top: 20px;">
+      <article class="phase done">
+        <div class="tag">Step 1</div>
+        <div>
+          <h3>Choose the host item</h3>
+          <p class="muted">
+            Это предмет, который будет получать модули: scanner, weapon, armor, backpack, device. У него должен быть обычный item data asset.
+          </p>
+        </div>
+      </article>
+      <article class="phase done">
+        <div class="tag">Step 2</div>
+        <div>
+          <h3>Add a slots fragment</h3>
+          <p class="muted">
+            Для сканера это может быть Scanner Module Slots. Для оружия - Weapon Module Slots. Fragment содержит именованные поля,
+            которые дизайнер видит как нормальные настройки.
+          </p>
+        </div>
+      </article>
+      <article class="phase done">
+        <div class="tag">Step 3</div>
+        <div>
+          <h3>Set slot rules</h3>
+          <p class="muted">
+            У каждого слота можно указать readable name и required item tags. Если слот требует <code>Module.Sensor</code>,
+            то item без этого tag не установится.
+          </p>
+        </div>
+      </article>
+      <article class="phase done">
+        <div class="tag">Step 4</div>
+        <div>
+          <h3>Create module items</h3>
+          <p class="muted">
+            Каждый модуль - отдельный item data asset. Он получает display, icon, gameplay data и tags, которые подходят нужному слоту.
+          </p>
+        </div>
+      </article>
+    </div>
+
+    <div class="cards two" style="margin-top: 20px;">
+      <article class="card good">
+        <div class="eyebrow">Host item editor</div>
+        <h3>Scanner slots</h3>
+        <div class="editor">
+          <div class="panel-head"><span class="label">Portable Scanner</span><span>Item Data Asset</span></div>
+          <div class="group">Fragments</div>
+          <div class="group">Scanner Module Slots</div>
+          <div class="row"><span class="k">Sensor</span><span class="v pick">Accepts: Module.Sensor</span></div>
+          <div class="row"><span class="k">Lens</span><span class="v pick">Accepts: Module.Lens</span></div>
+          <div class="row"><span class="k">Processor</span><span class="v pick">Accepts: Module.Processor</span></div>
+        </div>
+        <p class="muted" style="margin-top: 14px;">
+          Дизайнер видит три явных поля. Это не массив строк и не скрытая таблица.
+        </p>
+      </article>
+
+      <article class="card accent">
+        <div class="eyebrow">Module item editor</div>
+        <h3>Sensor module</h3>
+        <div class="editor">
+          <div class="panel-head"><span class="label">Advanced Sensor Mk2</span><span>Item Data Asset</span></div>
+          <div class="group">Fragments</div>
+          <div class="row"><span class="k">Display</span><span class="v">Advanced Sensor Mk2</span></div>
+          <div class="row"><span class="k">Tags</span><span class="v pick">Module.Sensor</span></div>
+          <div class="row"><span class="k">Gameplay</span><span class="v">Better detection range</span></div>
+        </div>
+        <p class="muted" style="margin-top: 14px;">
+          Модуль подходит слоту Sensor, потому что у него есть tag, который слот требует.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section id="upgrade">
+    <div class="section-head"><span class="num">02</span><h2>Upgrade <span class="accent">Reward</span></h2></div>
+    <div class="callout good">
+      <div class="bar"></div>
+      <div class="content">
+        <div class="label">What an upgrade does</div>
+        <p>
+          Upgrade может купить/получить progression marker, но gameplay change должен приходить от module item, установленного в host item.
+          Поэтому reward authoring использует resource <code>Install Item Module</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="cards two">
+      <article class="card good">
+        <div class="eyebrow">Reward bundle editor</div>
+        <h3>Install Item Module</h3>
+        <div class="editor">
+          <div class="panel-head"><span class="label">Grant Resources</span><span>Reward Bundle</span></div>
+          <div class="group">Install Item Module</div>
+          <div class="row"><span class="k">Host Query</span><span class="v">Equipped Item</span></div>
+          <div class="row"><span class="k">Target Slot</span><span class="v pick">Scanner Module Slots -> Sensor</span></div>
+          <div class="row"><span class="k">Module Item</span><span class="v">Sensor Upgrade Mk2</span></div>
+          <div class="row"><span class="k">Stack Count</span><span class="v">1</span></div>
+        </div>
+        <p class="muted" style="margin-top: 14px;">
+          Target Slot выбирается picker-ом: сначала fragment со слотами, потом конкретное поле. Ничего не вводится руками строкой.
+        </p>
+      </article>
+      <article class="card warn">
+        <div class="eyebrow">Host Query choices</div>
+        <h3>How the reward finds the host item</h3>
+        <ul class="clean">
+          <li><strong>Equipped Item</strong> - удобно для предмета в руках.</li>
+          <li><strong>Required Tags</strong> - удобно для уникального owned item с понятным role tag.</li>
+          <li><strong>Exact Definition</strong> - безопасно только если у игрока не может быть двух таких предметов.</li>
+          <li><strong>Item Id</strong> - точечный выбор конкретного экземпляра, обычно для специальных случаев.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="diagram" style="margin-top: 18px;">
+      <div class="diagram-title"><span>Runtime result</span><span>what gets saved</span></div>
+      <div class="flow">
+        <div class="node">
+          <div class="title">Player buys upgrade</div>
+          <div class="sub">Purchase transaction grants the module resource.</div>
+        </div>
+        <div class="arrow">--&gt;</div>
+        <div class="node">
+          <div class="title">Module is created</div>
+          <div class="sub">A real item instance is created with its own identity.</div>
+        </div>
+        <div class="arrow">--&gt;</div>
+        <div class="node">
+          <div class="title">Module is installed</div>
+          <div class="sub">Host item now carries the upgrade in its slot and save state.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="examples">
+    <div class="section-head"><span class="num">03</span><h2>Concrete <span class="accent">Examples</span></h2></div>
+    <div class="cards two" style="margin-top: 18px;">
+      <article class="card">
+        <div class="eyebrow">Scanner</div>
+        <h3>Sensor upgrade</h3>
+        <p class="muted">
+          Host item: Portable Scanner. Slot: Sensor. Module item: Advanced Sensor Mk2. Reward: install Advanced Sensor Mk2 into the scanner's Sensor slot.
+          Scanner gameplay reads the installed sensor module to decide detection behavior.
+        </p>
+        <div class="chips">
+          <span class="chip accent">Scanner</span>
+          <span class="chip good">Sensor Module</span>
+          <span class="chip warn">Lens Module</span>
+        </div>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Weapon</div>
+        <h3>Optic attachment</h3>
+        <p class="muted">
+          Host item: Modular Weapon. Slot: Optic. Module item: Compact Reflex Sight. Reward, loot or crafting can install the optic.
+          If the weapon is dropped, saved or moved, the installed optic travels with that specific weapon instance.
+        </p>
+        <div class="chips">
+          <span class="chip accent">Weapon</span>
+          <span class="chip good">Optic</span>
+          <span class="chip good">Muzzle</span>
+          <span class="chip good">Trigger</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="rules">
+    <div class="section-head"><span class="num">04</span><h2>Authoring <span class="accent">Rules</span></h2></div>
+    <div class="table">
+      <div class="tr header"><div class="td">Do</div><div class="td">Why</div></div>
+      <div class="tr"><div class="td">Make upgrades as module items</div><div class="td">The upgraded state belongs to the concrete item instance, so it saves, moves and debugs naturally.</div></div>
+      <div class="tr"><div class="td">Choose slots from picker</div><div class="td">Picker points to a real slot field. Raw strings can silently break after renames.</div></div>
+      <div class="tr"><div class="td">Use clear module tags</div><div class="td">Slot validation is easy to read: Sensor slot requires Module.Sensor, optic slot requires Module.Optic.</div></div>
+      <div class="tr"><div class="td">Make host queries unambiguous</div><div class="td">If an upgrade can match two owned items, content should narrow the query or change the reward design.</div></div>
+      <div class="tr"><div class="td">Keep fragments data-only</div><div class="td">Fragments describe slots and constraints. Installation logic stays in the shared system.</div></div>
+    </div>
+
+    <div class="callout danger">
+      <div class="bar"></div>
+      <div class="content">
+        <div class="label">Avoid</div>
+        <p>
+          Do not model a scanner upgrade only as <code>IsPurchased(Upgrade.ScannerRange2)</code> inside gameplay code.
+          The upgrade can still have a progression marker, but the item's actual capability should come from the installed module item.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="section-head"><span class="num">05</span><h2>FAQ <span class="accent">For Designers</span></h2></div>
+    <div class="cards two">
+      <article class="card">
+        <div class="eyebrow">Question</div>
+        <h3>Is a module different from an item?</h3>
+        <p class="muted">No. A module is an item used in a module slot. It can have display data, tags, gameplay data and save state like other items.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Question</div>
+        <h3>Does the module stay with the item?</h3>
+        <p class="muted">Yes. If a weapon has an optic installed, that optic belongs to that weapon instance's state. Moving or saving the weapon keeps its installed modules.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Question</div>
+        <h3>Can modules be removed or swapped?</h3>
+        <p class="muted">The architecture supports install/remove/swap as item slot operations. Specific UI, economy and balance rules are separate feature decisions.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Question</div>
+        <h3>What if the reward finds several matching items?</h3>
+        <p class="muted">That should fail. A reward must target one clear host item, otherwise the player could get a module installed into the wrong thing.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Question</div>
+        <h3>Why not keep this as traits only?</h3>
+        <p class="muted">Traits describe item type and allowed behavior. Installed modules are runtime state of one concrete item instance.</p>
+      </article>
+      <article class="card">
+        <div class="eyebrow">Question</div>
+        <h3>Are purchase tags still useful?</h3>
+        <p class="muted">Yes, for progression history and unlock checks. They should not be the only source of item capability when a concrete module can represent that capability.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="appendix">
+    <div class="section-head"><span class="num">06</span><h2>Technical <span class="accent">Appendix</span></h2></div>
+    <p class="muted">
+      This section is for programmers and technical designers. It is not required to author ordinary modular items.
+    </p>
+
+    <div class="cards two" style="margin-top: 18px;">
+      <article class="card good">
+        <div class="eyebrow">Slot identity</div>
+<pre><code>FItemSlotId =
+    FragmentClass
+    PropertyName</code></pre>
+        <p class="muted" style="margin-top: 12px;">
+          The editor shows this as "choose slot fragment, then choose slot field".
+        </p>
+      </article>
+      <article class="card good">
+        <div class="eyebrow">Slot declaration</div>
+<pre><code>FItemSlotSpec =
+    DisplayName
+    RequiredItemTags
+    bAllowEmpty</code></pre>
+        <p class="muted" style="margin-top: 12px;">
+          The spec is data. Validation reads it; the spec itself does not perform logic.
+        </p>
+      </article>
+    </div>
+
+    <div class="cards two" style="margin-top: 16px;">
+      <article class="card accent">
+        <div class="eyebrow">Runtime state</div>
+<pre><code>FItemInstanceSlot =
+    SlotId
+    Installed item instance
+    Installed item save blob</code></pre>
+        <p class="muted" style="margin-top: 12px;">
+          The host item stores installed module state recursively.
+        </p>
+      </article>
+      <article class="card warn">
+        <div class="eyebrow">Review topics</div>
+        <ul class="clean">
+          <li>Final human-readable item id format.</li>
+          <li>Unloaded map and unloaded holder lookup.</li>
+          <li>Field rename migration for saved slot ids.</li>
+          <li>Long-term move of instance state into registry records.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="table" style="margin-top: 18px;">
+      <div class="tr header"><div class="td">Term</div><div class="td">Plain definition</div></div>
+      <div class="tr"><div class="td">Host item</div><div class="td">The item that owns slots and receives modules.</div></div>
+      <div class="tr"><div class="td">Module item</div><div class="td">A normal item instance installed into a host item's slot.</div></div>
+      <div class="tr"><div class="td">Slot spec</div><div class="td">Data-only field that declares a slot and its constraints.</div></div>
+      <div class="tr"><div class="td">Grant resource</div><div class="td">Progression reward operation, such as creating and installing a module item.</div></div>
+      <div class="tr"><div class="td">Registry</div><div class="td">Identity and metadata catalog. Not an inventory and not a location cache.</div></div>
+      <div class="tr"><div class="td">Slot subsystem</div><div class="td">Shared runtime system that validates and moves loaded item instances between loaded slots.</div></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="frame">Modular Items Guide / public-safe designer-facing spec / updated 2026-05-26</div>
+</footer>
+</body>
+</html>
