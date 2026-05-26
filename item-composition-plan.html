@@ -539,7 +539,7 @@
   <div class="frame row">
     <div><span class="status-dot"></span>Modular Items Guide</div>
     <nav class="nav" aria-label="Page navigation">
-      <a href="#start">Start</a>
+      <a href="#tldr">TL;DR</a>
       <a href="#setup">Setup</a>
       <a href="#upgrade">Upgrade</a>
       <a href="#examples">Examples</a>
@@ -560,6 +560,19 @@
         апгрейд, attachment или компонент - это обычный предмет, установленный в слот другого предмета.
         Дизайнер настраивает слоты, модули и награды в редакторе; runtime хранит результат как состояние конкретного экземпляра предмета.
       </p>
+      <div id="tldr" class="callout good">
+        <div class="bar"></div>
+        <div class="content">
+          <div class="label">TL;DR</div>
+          <ul class="clean">
+            <li>Host item declares named slots: Sensor, Lens, Optic, Trigger.</li>
+            <li>Module item is a normal item that can be installed into one of those slots.</li>
+            <li>Designer sets slot rules on the host and tags on module items.</li>
+            <li>Upgrade reward creates or grants a module item and installs it into the selected slot.</li>
+            <li>The result is saved on the concrete item instance, not only as an external purchase flag.</li>
+          </ul>
+        </div>
+      </div>
     </div>
     <aside class="hero-panel" aria-label="Status summary">
       <div class="head"><span>Read this as</span><span>Glossary</span></div>
