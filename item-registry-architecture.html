@@ -1,0 +1,1329 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Item Registry · архитектура предметов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050810;
+    --bg-elev: #08101a;
+    --bg-card: #0a1422;
+    --bg-code: #04070d;
+    --bg-panel: #0f1a2a;
+    --bg-panel-row: #0b1422;
+
+    --text: #d4dde6;
+    --text-muted: #8a98a8;
+    --text-faint: #5e6b7a;
+    --text-dim: #3d4856;
+
+    --border: #1a2638;
+    --border-soft: #131c2a;
+    --border-hard: #243348;
+
+    --accent: #5fc3e8;
+    --accent-bright: #8fd9f0;
+    --accent-soft: rgba(95, 195, 232, 0.10);
+    --accent-line: rgba(95, 195, 232, 0.35);
+
+    --good: #6dc99a;
+    --warn: #e8c447;
+    --danger: #e87045;
+
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(143,217,240,0.015) 2px, rgba(143,217,240,0.015) 3px);
+    pointer-events: none; z-index: 1000;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 70% 30%, rgba(95,195,232,0.04) 0%, transparent 45%),
+                radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.65) 100%);
+    pointer-events: none; z-index: 999;
+  }
+
+  /* Schematic background — Registry ownership graph */
+  .schematic-bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.45;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .frame { max-width: 920px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2; }
+  @media (max-width: 700px) { .frame { padding: 0 20px; } }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg) 100%);
+    position: relative; z-index: 2;
+  }
+  .topbar .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .topbar .dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--accent); border-radius: 50%;
+    margin-right: 8px; vertical-align: middle;
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .topbar .classification { color: var(--accent); font-weight: 600; }
+
+  main { padding: 64px 0 96px 0; }
+
+  /* Header */
+  header.dossier { margin-bottom: 72px; position: relative; padding-left: 24px; }
+  header.dossier::before {
+    content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 3px; background: var(--accent);
+  }
+  header.dossier .stamp {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 16px;
+  }
+  header.dossier h1 {
+    font-family: var(--mono); font-weight: 600;
+    font-size: 42px; line-height: 1.15; margin: 0 0 20px 0;
+    letter-spacing: -0.02em;
+  }
+  header.dossier h1 .accent { color: var(--accent); }
+  header.dossier .lede {
+    font-size: 18px; color: var(--text-muted);
+    max-width: 640px; margin: 0;
+  }
+  @media (max-width: 700px) { header.dossier h1 { font-size: 30px; } }
+
+  /* Sections */
+  section { margin-bottom: 80px; scroll-margin-top: 24px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 16px;
+    margin-bottom: 24px;
+  }
+  .section-head .num {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text-faint); letter-spacing: 0.12em;
+  }
+  .section-head h2 {
+    font-family: var(--mono); font-weight: 600;
+    font-size: 24px; margin: 0; letter-spacing: -0.005em;
+  }
+  .section-head h2 .accent { color: var(--accent); }
+
+  h3 { font-size: 18px; margin: 32px 0 12px 0; font-weight: 600; }
+  p { margin: 0 0 14px 0; }
+  p.muted { color: var(--text-muted); }
+  p.big { font-size: 18px; line-height: 1.55; }
+
+  strong { color: var(--accent-bright); font-weight: 600; }
+  em { color: var(--text); font-style: italic; }
+
+  code {
+    font-family: var(--mono); background: var(--bg-code);
+    padding: 1px 7px; border-radius: 2px; font-size: 0.88em;
+    color: var(--accent-bright); border: 1px solid var(--border-soft);
+  }
+
+  /* Callouts */
+  .callout {
+    padding: 16px 22px; margin: 24px 0;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-left: 3px solid; font-size: 15px;
+  }
+  .callout .label {
+    font-family: var(--mono); text-transform: uppercase;
+    letter-spacing: 0.1em; font-size: 10px; font-weight: 700;
+    margin-bottom: 8px; display: block;
+  }
+  .callout.accent { border-left-color: var(--accent); }
+  .callout.accent .label { color: var(--accent); }
+  .callout.good { border-left-color: var(--good); }
+  .callout.good .label { color: var(--good); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* Why-cards: corner-cut tiles */
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .why-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 22px 24px;
+    position: relative;
+  }
+  .why-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px;
+    width: 16px; height: 16px;
+    border-top: 2px solid var(--accent);
+    border-left: 2px solid var(--accent);
+  }
+  .why-card .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .why-card h4 {
+    font-family: var(--sans);
+    font-size: 16px;
+    margin: 0 0 10px 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .why-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* Role cards: three pillars layout */
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 28px 0;
+  }
+  @media (max-width: 760px) { .role-grid { grid-template-columns: 1fr; } }
+  .role {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    padding: 22px 22px 24px;
+    position: relative;
+  }
+  .role .role-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .role h4 {
+    font-family: var(--mono);
+    font-size: 20px;
+    margin: 0 0 12px 0;
+    color: var(--text);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .role p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 10px 0;
+    line-height: 1.55;
+  }
+  .role p:last-child { margin-bottom: 0; }
+  .role ul {
+    margin: 6px 0 0 0;
+    padding-left: 18px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+  .role ul li { margin: 4px 0; }
+
+  /* Vocabulary list */
+  .vocab {
+    border-top: 1px solid var(--border);
+  }
+  .vocab .term {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  @media (max-width: 680px) {
+    .vocab .term { grid-template-columns: 1fr; gap: 6px; }
+  }
+  .vocab .term .name {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .vocab .term .name .alt {
+    color: var(--text-faint);
+    font-weight: 400;
+    margin-left: 6px;
+    font-size: 12px;
+  }
+  .vocab .term .def {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .vocab .term .def strong { color: var(--text); font-weight: 500; }
+
+  /* Patterns */
+  .patterns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .pattern {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 760px) { .pattern { grid-template-columns: 1fr; gap: 10px; } }
+  .pattern h4 {
+    font-family: var(--mono);
+    font-size: 16px;
+    margin: 0;
+    color: var(--accent-bright);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .pattern p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  /* Recipes */
+  .recipes { display: grid; gap: 18px; margin-top: 24px; }
+  .recipe {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .recipe .recipe-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border-soft);
+    background: linear-gradient(180deg, var(--bg-panel-head) 0%, var(--bg-card) 100%);
+  }
+  .recipe .recipe-head h4 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 17px;
+    color: var(--text);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .status {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .status.real    { color: var(--good);   border-color: rgba(109,201,154,0.4); background: rgba(109,201,154,0.06); }
+  .status.partial { color: var(--warn);   border-color: rgba(232,196,71,0.4);  background: rgba(232,196,71,0.06); }
+  .status.concept { color: var(--accent); border-color: var(--accent-line);    background: var(--accent-soft); }
+
+  .recipe-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 820px) { .recipe-body { grid-template-columns: 1fr; } }
+  .recipe-body .col {
+    padding: 18px 22px;
+  }
+  .recipe-body .col + .col {
+    border-left: 1px solid var(--border-soft);
+    background: var(--bg-panel-row);
+  }
+  @media (max-width: 820px) {
+    .recipe-body .col + .col { border-left: 0; border-top: 1px solid var(--border-soft); }
+  }
+  .recipe-body p { margin: 0 0 10px 0; color: var(--text-muted); font-size: 14.5px; line-height: 1.55; }
+  .recipe-body p:last-child { margin: 0; }
+  .recipe-body p strong { color: var(--accent-bright); font-weight: 600; }
+  .recipe-body .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+  .recipe-body ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .recipe-body ul li { margin: 5px 0; }
+  .recipe-body ul li.done::marker { color: var(--good); }
+  .recipe-body ul li.todo::marker { color: var(--warn); }
+  .recipe-body ul li.todo { color: var(--text-faint); }
+
+  /* Tree (item composition) */
+  .tree-wrap {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--bg-code);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    overflow-x: auto;
+  }
+  .tree { list-style: none; margin: 0; padding: 0; }
+  .tree ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 18px;
+    position: relative;
+  }
+  .tree ul::before {
+    content: '';
+    position: absolute;
+    left: 4px; top: 0; bottom: 8px;
+    width: 1px;
+    background: var(--border-hard);
+  }
+  .tree li {
+    position: relative;
+    padding: 3px 0 3px 16px;
+  }
+  .tree li::before {
+    content: '';
+    position: absolute;
+    left: 4px; top: 13px;
+    width: 11px; height: 1px;
+    background: var(--border-hard);
+  }
+  .tree > li { padding-left: 0; }
+  .tree > li::before { display: none; }
+  .tree .holder { color: var(--accent-bright); font-weight: 600; }
+  .tree .slot   { color: var(--text-faint); }
+  .tree .mark   { color: var(--warn); }
+  .tree .miss   { color: var(--danger); font-style: italic; }
+
+  footer {
+    margin-top: 64px; padding: 24px 0; border-top: 1px solid var(--border);
+    color: var(--text-faint); font-family: var(--mono);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    position: relative; z-index: 2;
+  }
+  footer .sig { color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<svg class="schematic-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+  <!-- Faint reference grid (static) -->
+  <g stroke="rgba(95,195,232,0.02)" stroke-width="1" fill="none">
+    <line x1="0" y1="270"  x2="1920" y2="270"/>
+    <line x1="0" y1="540"  x2="1920" y2="540"/>
+    <line x1="0" y1="810"  x2="1920" y2="810"/>
+    <line x1="480"  y1="0" x2="480"  y2="1080"/>
+    <line x1="960"  y1="0" x2="960"  y2="1080"/>
+    <line x1="1440" y1="0" x2="1440" y2="1080"/>
+  </g>
+  <!-- Live graph: hubs, edges, leaves — populated by graph.js below -->
+  <g id="graph-root"></g>
+</svg>
+
+<div class="topbar">
+  <div class="frame row">
+    <span><span class="dot"></span><span class="classification">Internal Document</span></span>
+    <span>Item Registry · Architecture · 2026-06-02</span>
+  </div>
+</div>
+
+<main class="frame">
+
+  <header class="dossier">
+    <div class="stamp">Architecture · Items</div>
+    <h1>Одна вещь — одна <span class="accent">запись</span>,<br>любое число представлений</h1>
+    <p class="lede">
+      Item Registry — это память о предметах. Багаж NPC, оружие в руках, контейнер на полу, модуль внутри сканера —
+      одна сущность одного типа. Предмет существует как запись с уникальной идентичностью; то, что игрок видит на экране,
+      — лишь одно из её представлений. Перенос между руками, багажом, миром и устройством не создаёт копий и не теряет состояние.
+    </p>
+  </header>
+
+  <section id="why">
+    <div class="section-head">
+      <span class="num">01 ·</span>
+      <h2>Что даёт <span class="accent">реестр</span></h2>
+    </div>
+
+    <p class="big muted">
+      Дизайн раньше держался на точечных решениях: отдельная логика для багажа, отдельная для оружия, отдельная для подбираемых актёров. Теперь у всех вещей общий контракт — и из него собирается остальное.
+    </p>
+
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="num">01</div>
+        <h4>Идентичность переживает перенос</h4>
+        <p>Предмет не пересоздаётся, когда его подобрали, упаковали, экипировали или выложили обратно. Это одна запись от первого появления до конца игры.</p>
+      </div>
+      <div class="why-card">
+        <div class="num">02</div>
+        <h4>Сборка вместо подкласса</h4>
+        <p>Сканер, оружие, PDA — это предметы с вложенными предметами. Варианты и прогрессия делаются заменой деталей, а не отдельным ассетом на каждый случай.</p>
+      </div>
+      <div class="why-card">
+        <div class="num">03</div>
+        <h4>Контейнер — это просто предмет</h4>
+        <p>Багаж и ящики не требуют отдельной системы владения. Они держат другие предметы тем же механизмом, что NPC держит вещи в руках.</p>
+      </div>
+      <div class="why-card">
+        <div class="num">04</div>
+        <h4>Мир — представление, не источник</h4>
+        <p>Видимый объект на карте — это проекция записи. Данные хранит реестр; объект сцены может появиться, исчезнуть или перейти в инвентарь, не задевая саму запись.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="model">
+    <div class="section-head">
+      <span class="num">02 ·</span>
+      <h2>Три роли одного <span class="accent">предмета</span></h2>
+    </div>
+
+    <p class="muted">
+      Любой предмет в реестре одновременно играет до трёх ролей. Какую именно — задаёт его описание (data asset).
+      Большинство вещей сочетает две из них, контейнеры и устройства — все три.
+    </p>
+
+    <div class="role-grid">
+      <div class="role">
+        <div class="role-tag">Запись</div>
+        <h4>Identity</h4>
+        <p>Уникальный идентификатор и собственное состояние: износ, заряд, статус «найден при досмотре», пользовательские пометки. Запись — это то, что игра помнит между сценами и в save-файле.</p>
+      </div>
+      <div class="role">
+        <div class="role-tag">Держатель</div>
+        <h4>Holder</h4>
+        <p>У предмета могут быть слоты под другие предметы. NPC держит экипировку и багаж, багаж держит содержимое, сканер держит линзу и сенсор, оружие — обвес.</p>
+      </div>
+      <div class="role">
+        <div class="role-tag">Представление</div>
+        <h4>Presentation</h4>
+        <p>Видимая форма в текущей сцене: actor на полу, иконка в инвентаре, меш в руках персонажа. Представление — следствие записи, а не её замена; одна запись имеет ноль или одно активное представление.</p>
+      </div>
+    </div>
+
+    <div class="callout accent">
+      <span class="label">Граница ответственности</span>
+      <p>Запись и состояние принадлежат реестру. Создание визуальных представлений — отдельная подсистема.
+      Дизайнер описывает предмет один раз; правила появления его в мире, в руках или в виджете инвентаря решаются вне описания.</p>
+    </div>
+  </section>
+
+  <section id="vocab">
+    <div class="section-head">
+      <span class="num">03 ·</span>
+      <h2>Словарь</h2>
+    </div>
+
+    <p class="muted">Шесть терминов, которые встречаются дальше в документе и в обсуждениях команды.</p>
+
+    <div class="vocab">
+      <div class="term">
+        <div class="name">Предмет<span class="alt">/ item</span></div>
+        <div class="def">Сущность с уникальным идентификатором. От ботинок и консервов до квестовой записки — всё это записи в реестре. Идентификатор не повторяется в рамках сейва.</div>
+      </div>
+      <div class="term">
+        <div class="name">Слот<span class="alt">/ slot</span></div>
+        <div class="def">Именованное место внутри держателя. Слот рюкзака у NPC, слот ствола у пистолета, слот линзы у сканера. Слот может принять не любой предмет, а только подходящий по правилам описания.</div>
+      </div>
+      <div class="term">
+        <div class="name">Держатель<span class="alt">/ holder</span></div>
+        <div class="def">Предмет, у которого есть слоты под другие предметы. NPC, багаж, оружие, PDA, контейнер на уровне — все они держатели. Держатель сам тоже хранится как запись.</div>
+      </div>
+      <div class="term">
+        <div class="name">Корень<span class="alt">/ root</span></div>
+        <div class="def">Верхний уровень иерархии: персонажи, мир текущей карты, служебное хранение для квестовых предметов. У корня нет владельца — он сам определяет область принадлежности.</div>
+      </div>
+      <div class="term">
+        <div class="name">Представление<span class="alt">/ presentation</span></div>
+        <div class="def">То, что видно в игре: actor в мире, виджет в инвентаре, меш на персонаже. Представление можно убрать или перенести, не теряя саму запись.</div>
+      </div>
+      <div class="term">
+        <div class="name">Описание<span class="alt">/ data asset</span></div>
+        <div class="def">Тип предмета как ассет: какие слоты в нём есть, какие теги он несёт, какие правила к нему применяются. Один ассет — много записей с одинаковым описанием и разной судьбой.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="patterns">
+    <div class="section-head">
+      <span class="num">04 ·</span>
+      <h2>Что можно <span class="accent">проектировать</span></h2>
+    </div>
+
+    <p class="muted">
+      Эти конструкции — не отдельные системы, а формы использования одной и той же модели.
+      Если фича укладывается в одну из них, для неё не нужен новый каркас.
+    </p>
+
+    <div class="patterns">
+      <article class="pattern">
+        <h4>Предмет-контейнер</h4>
+        <p>Багаж, ящик, тайник, набор модулей — предмет, который держит другие предметы.
+          Подходит для досмотра, лута, инвентарей NPC, наборов улик.</p>
+      </article>
+
+      <article class="pattern">
+        <h4>Предмет-сборка</h4>
+        <p>Устройство, собранное из заменяемых частей: оружие с обвесом, сканер с линзой и сенсором, PDA с модулями.
+          Апгрейд и ремонт делаются заменой детали, а не выдачей нового предмета целиком.</p>
+      </article>
+
+      <article class="pattern">
+        <h4>Постоянство при переносе</h4>
+        <p>При подборе, упаковке, экипировке или выгрузке создаётся новое представление, но запись остаётся прежней.
+          Износ, метки, найденная контрабанда не сбрасываются — реестр продолжает помнить ту же вещь.</p>
+      </article>
+
+      <article class="pattern">
+        <h4>Предмет без видимого представления</h4>
+        <p>Запись может существовать без объекта на текущей карте: квестовый предмет в фоновом хранении,
+          награда, которую игрок ещё не получил, артефакт, который должен появиться позже.
+          Реестр держит его, мир — пока нет.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="recipes">
+    <div class="section-head">
+      <span class="num">05 ·</span>
+      <h2>Сценарии <span class="accent">сборки</span></h2>
+    </div>
+
+    <p class="muted">
+      Конкретные применения модели. У каждого сценария — статус по текущей сборке:
+      <span class="status real" style="margin-left:4px">готово</span>
+      <span class="status partial" style="margin-left:4px">частично</span>
+      <span class="status concept" style="margin-left:4px">концепт</span>.
+    </p>
+
+    <div class="recipes">
+
+      <article class="recipe">
+        <div class="recipe-head">
+          <h4>Багаж NPC</h4>
+          <span class="status real">готово</span>
+        </div>
+        <div class="recipe-body">
+          <div class="col">
+            <div class="label">Сборка</div>
+            <div class="tree-wrap">
+              <ul class="tree">
+                <li><span class="holder">NPC</span>
+                  <ul>
+                    <li><span class="slot">слот: переносимый багаж</span>
+                      <ul>
+                        <li><span class="holder">Чемодан</span>
+                          <ul>
+                            <li>Ботинки</li>
+                            <li>Консервы</li>
+                            <li>Ограниченный компонент <span class="mark">[контрабанда]</span></li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col">
+            <div class="label">Что это даёт</div>
+            <p>Досмотр работает с составом багажа, а не с россыпью отдельных актёров в сцене. Что бы NPC ни нёс — еду, бельё или запрещёнку — у пограничника один и тот же интерфейс осмотра.</p>
+            <p><strong>Состояние:</strong> корень для персонажей и слот переносимого багажа у NPC уже работают, содержимое наполняется динамически на спавне.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="recipe">
+        <div class="recipe-head">
+          <h4>PDA со сканером и сменными модулями</h4>
+          <span class="status partial">частично</span>
+        </div>
+        <div class="recipe-body">
+          <div class="col">
+            <div class="label">Сборка</div>
+            <div class="tree-wrap">
+              <ul class="tree">
+                <li><span class="holder">PDA</span>
+                  <ul>
+                    <li><span class="slot">слот: инструмент</span>
+                      <ul>
+                        <li><span class="holder">Сканер</span>
+                          <ul>
+                            <li>Сенсор</li>
+                            <li>Линза</li>
+                            <li>Процессор</li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col">
+            <div class="label">Что это даёт</div>
+            <p>Прогрессия инструмента — это замена детали. Поставил линзу получше — сканер видит дальше; поменял процессор — распознаёт быстрее. Игрок понимает, что именно стало лучше и почему.</p>
+            <p><strong>Состояние:</strong> группы слотов для PDA и сканера объявлены, PDA и xray-сканер уже существуют как ассеты, общий механизм установки модуля в слот работает. Не хватает игровых правил, которые превращают замену детали в видимое изменение характеристик.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="recipe">
+        <div class="recipe-head">
+          <h4>Оружие с обвесом</h4>
+          <span class="status partial">частично</span>
+        </div>
+        <div class="recipe-body">
+          <div class="col">
+            <div class="label">Сборка</div>
+            <div class="tree-wrap">
+              <ul class="tree">
+                <li><span class="holder">Оружие</span>
+                  <ul>
+                    <li>Прицел</li>
+                    <li>Ствол</li>
+                    <li>Спусковой механизм</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col">
+            <div class="label">Что это даёт</div>
+            <p>Варианты одного оружия собираются из деталей вместо отдельных копий ассета на каждую конфигурацию. Лут и торговля становятся осмысленнее: ценность смещается с самой пушки на её части.</p>
+            <p><strong>Состояние:</strong> ассеты оружия и слоты под прицел, ствол и спусковой механизм объявлены. Базовая настройка оружия пока не делает каждый экземпляр модульным — нужны конкретные правила, какие детали и как влияют на стрельбу.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="recipe">
+        <div class="recipe-head">
+          <h4>Квестовый предмет вне текущей карты</h4>
+          <span class="status concept">концепт</span>
+        </div>
+        <div class="recipe-body">
+          <div class="col">
+            <div class="label">Сборка</div>
+            <div class="tree-wrap">
+              <ul class="tree">
+                <li><span class="holder">Служебное хранилище</span>
+                  <ul>
+                    <li><span class="holder">Папка улик</span>
+                      <ul>
+                        <li>Разрешение</li>
+                        <li>Фотография</li>
+                        <li>Зашифрованная записка</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col">
+            <div class="label">Что это даёт</div>
+            <p>Важная вещь не обязана лежать на текущем уровне, чтобы существовать для квеста. Предмет переживает смену сцен и всплывает в нужный момент — у NPC в кармане, в тайнике, у игрока в инвентаре.</p>
+            <p><strong>Состояние:</strong> записи без активного представления возможны архитектурно; квестовая система уже реагирует на появление предмета и на предмет в руках. Не хватает выделенного корня для квестового хранения и правил, кто может туда класть и забирать.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="recipe">
+        <div class="recipe-head">
+          <h4>Тайник с многоуровневой упаковкой</h4>
+          <span class="status concept">концепт</span>
+        </div>
+        <div class="recipe-body">
+          <div class="col">
+            <div class="label">Сборка</div>
+            <div class="tree-wrap">
+              <ul class="tree">
+                <li><span class="holder">NPC</span>
+                  <ul>
+                    <li><span class="slot">слот: переносимый багаж</span>
+                      <ul>
+                        <li><span class="holder">Чемодан</span>
+                          <ul>
+                            <li><span class="slot">слот: основной отсек</span>
+                              <ul>
+                                <li>Чистая рубашка</li>
+                                <li>Термос</li>
+                                <li>Записная книжка</li>
+                              </ul>
+                            </li>
+                            <li><span class="slot">слот: двойное дно</span> <span class="miss">скрыт до досмотра</span>
+                              <ul>
+                                <li><span class="holder">Жестяная коробка</span>
+                                  <ul>
+                                    <li>Капсула <span class="mark">[контрабанда]</span></li>
+                                    <li>Капсула <span class="mark">[контрабанда]</span></li>
+                                  </ul>
+                                </li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col">
+            <div class="label">Что это даёт</div>
+            <p>Контейнер в контейнере в контейнере. Одна и та же модель слотов работает на любой глубине: чемодан держит отделения, отделение держит коробку, коробка держит капсулы. Никакого отдельного кода под «двухуровневую упаковку» против «трёхуровневой» — досмотр рекурсивно проходит по тем же кубикам.</p>
+            <p>Скрытый слот — слот, у которого нет видимого представления, пока не сработал триггер обнаружения. Запись о тайнике существует с момента появления чемодана; игрок видит её только после досмотра.</p>
+            <p><strong>Состояние:</strong> произвольная глубина вложенности поддержана архитектурно, контейнер-как-предмет работает на всех уровнях одной и той же механикой. Не хватает отдельной политики для скрытых слотов — когда и по какому условию они становятся видимы — и привязки этой политики к инспекционной механике.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="recipe">
+        <div class="recipe-head">
+          <h4>Ремонтируемое устройство</h4>
+          <span class="status concept">концепт</span>
+        </div>
+        <div class="recipe-body">
+          <div class="col">
+            <div class="label">Сборка</div>
+            <div class="tree-wrap">
+              <ul class="tree">
+                <li><span class="holder">Сломанное радио</span>
+                  <ul>
+                    <li><span class="miss">антенна — отсутствует</span></li>
+                    <li><span class="mark">батарея — повреждена</span></li>
+                    <li>плата — на месте</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col">
+            <div class="label">Что это даёт</div>
+            <p>«Сломано» и «починено» перестаёт быть невидимым флагом. Игрок видит, какой детали не хватает, и знает, что искать. Дизайнер собирает квест на ремонт из тех же кубиков, что и обычный обвес.</p>
+            <p><strong>Состояние:</strong> модель слотов покрывает сборку из частей, общий механизм установки модуля в слот работает. Не хватает игровой логики, которая решает, в какой момент устройство считается восстановленным и что это значит.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="callout good">
+      <span class="label">Чему служит документ</span>
+      <p>Это карта возможностей, а не план реализации. Если новая фича укладывается в один из сценариев выше — её можно собирать через реестр и слоты. Если не укладывается — это сигнал к обсуждению, а не к новой подсистеме.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="frame">
+  <span>Items · Architecture v1</span>
+  <span class="sig">internal · 2026-06-02</span>
+</footer>
+
+<script>
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+  const root = document.getElementById('graph-root');
+  if (!root) return;
+
+  // === Per-level visual + physics tuning ===
+  // L1 = root (anchored), L4 = innermost holders (live)
+  const LV = {
+    1: { w: 58, h: 22, fs: 11, sw: 1.4, edgeOp: 0.42, edgeW: 1.20, dash: 'none', pull: 0.0045, wander: 0.018 },
+    2: { w: 40, h: 16, fs: 10, sw: 1.0, edgeOp: 0.30, edgeW: 0.95, dash: '6 4',  pull: 0.0028, wander: 0.034 },
+    3: { w: 32, h: 13, fs:  9, sw: 0.8, edgeOp: 0.22, edgeW: 0.70, dash: '3 5',  pull: 0.0022, wander: 0.045 },
+    4: { w: 24, h: 11, fs:  8, sw: 0.7, edgeOp: 0.15, edgeW: 0.50, dash: '2 6',  pull: 0.0018, wander: 0.055 },
+  };
+
+  // Parent map for path-to-root highlight on transfers
+  const hubParent = {
+    characters: 'registry', world: 'registry',
+    player: 'characters',   npc:   'characters',
+    pickups: 'world',       containers: 'world',  quest: 'world',
+    pda:     'player',      backpack:   'player',
+    luggage: 'npc',         weapon:     'npc',
+    suitcase: 'containers',
+  };
+  function ancestorEdges(hub) {
+    const out = [];
+    let cur = hub;
+    while (hubParent[cur]) { out.push([hubParent[cur], cur]); cur = hubParent[cur]; }
+    return out;
+  }
+
+  // === Topology: 5 levels deep, multi-branch ===
+  const hubs = {
+    // L1 — registry root
+    registry:   { hx:  960, hy:  95, label: '[REGISTRY:ROOT]', level: 1 },
+
+    // L2 — top branches
+    characters: { hx:  440, hy: 310, label: '[CHARACTERS]',    level: 2 },
+    world:      { hx: 1480, hy: 310, label: '[WORLD]',          level: 2 },
+
+    // L3 — actors / world subdivisions
+    player:     { hx:  220, hy: 560, label: '[PLAYER]',         level: 3 },
+    npc:        { hx:  560, hy: 620, label: '[NPC]',            level: 3 },
+    pickups:    { hx: 1280, hy: 560, label: '[WORLD:PICKUPS]',  level: 3 },
+    containers: { hx: 1500, hy: 620, label: '[WORLD:CONTAINERS]', level: 3 },
+    quest:      { hx: 1720, hy: 580, label: '[QUEST:STORE]',    level: 3 },
+
+    // L4 — slots / sub-holders
+    pda:        { hx:  100, hy: 810, label: '[PDA]',            level: 4 },
+    backpack:   { hx:  260, hy: 830, label: '[BACKPACK]',       level: 4 },
+    luggage:    { hx:  480, hy: 870, label: '[LUGGAGE]',        level: 4 },
+    weapon:     { hx:  660, hy: 820, label: '[WEAPON]',         level: 4 },
+    suitcase:   { hx: 1600, hy: 830, label: '[SUITCASE]',       level: 4 },
+  };
+  for (const id in hubs) {
+    const h = hubs[id];
+    h.x = h.hx; h.y = h.hy; h.vx = 0; h.vy = 0;
+    const v = LV[h.level];
+    h.w = v.w; h.ht = v.h; h.fs = v.fs; h.sw = v.sw;
+  }
+
+  // Parent-child edges (full ownership tree)
+  const hubEdges = [
+    // L1 → L2
+    ['registry','characters'], ['registry','world'],
+    // L2 → L3
+    ['characters','player'], ['characters','npc'],
+    ['world','pickups'], ['world','containers'], ['world','quest'],
+    // L3 → L4
+    ['player','pda'], ['player','backpack'],
+    ['npc','luggage'], ['npc','weapon'],
+    ['containers','suitcase'],
+  ];
+
+  // === Leaves: bottom-level items ===
+  const leaves = [];
+  function spawnLeaves(parent, count) {
+    const p = hubs[parent];
+    for (let i = 0; i < count; i++) {
+      leaves.push({
+        parent,
+        x: p.hx + (Math.random() - 0.5) * 60,
+        y: p.hy + 32 + Math.random() * 30,
+        vx: 0, vy: 0, flash: 0,
+      });
+    }
+  }
+  // L5 items under L4 holders
+  spawnLeaves('pda', 3);        // sensor, lens, processor
+  spawnLeaves('backpack', 3);
+  spawnLeaves('luggage', 4);
+  spawnLeaves('weapon', 3);     // scope, barrel, trigger
+  spawnLeaves('suitcase', 3);
+  // L4 items under L3 holders (no L4 sub-hub here)
+  spawnLeaves('pickups', 4);
+  spawnLeaves('quest', 3);
+
+  // === SVG helpers ===
+  function el(name, attrs) {
+    const node = document.createElementNS(NS, name);
+    if (attrs) for (const k in attrs) node.setAttribute(k, attrs[k]);
+    return node;
+  }
+
+  const leafEdgeLayer = el('g', { stroke: 'rgba(95,195,232,0.10)', 'stroke-width': '0.5', fill: 'none' });
+  const hubEdgeLayer  = el('g', { fill: 'none' });
+  const haloLayer     = el('g'); // L1 halo, sits behind boxes
+  const nodeLayer     = el('g');
+  const labelLayer    = el('g', {
+    'font-family': "'JetBrains Mono', ui-monospace, monospace",
+    'letter-spacing': '1.4',
+    fill: 'rgba(143,217,240,0.5)',
+  });
+  root.appendChild(leafEdgeLayer);
+  root.appendChild(hubEdgeLayer);
+  root.appendChild(haloLayer);
+  root.appendChild(nodeLayer);
+  root.appendChild(labelLayer);
+
+  // Hub edges — style depends on deeper endpoint's level
+  // edge has baseOpa/baseWidth for normal state + glow for path-highlight (0..1)
+  const hubEdgeEls = hubEdges.map(([a, b]) => {
+    const deeper = Math.max(hubs[a].level, hubs[b].level);
+    const v = LV[deeper];
+    const ln = el('line');
+    if (v.dash !== 'none') ln.setAttribute('stroke-dasharray', v.dash);
+    hubEdgeLayer.appendChild(ln);
+    return { a, b, el: ln, baseOpa: v.edgeOp, baseW: v.edgeW, glow: 0 };
+  });
+  // Index for fast lookup during path highlight (key: 'parent>child' or 'child>parent')
+  const edgeIndex = {};
+  for (const e of hubEdgeEls) {
+    edgeIndex[e.a + '>' + e.b] = e;
+    edgeIndex[e.b + '>' + e.a] = e;
+  }
+
+  // Hub boxes + labels (+ halo for L1)
+  for (const id in hubs) {
+    const h = hubs[id];
+    if (h.level === 1) {
+      // Halo: thin dashed outer ring (kept subtle — just enough to mark the root)
+      h.halo = el('rect', {
+        width: h.w + 18, height: h.ht + 12,
+        fill: 'none',
+        stroke: 'rgba(143,217,240,0.14)',
+        'stroke-width': '0.5',
+        'stroke-dasharray': '2 5',
+      });
+      haloLayer.appendChild(h.halo);
+    }
+    const isRoot = h.level === 1;
+    h.box = el('rect', {
+      width: h.w, height: h.ht,
+      fill: isRoot ? 'rgba(10,22,38,0.82)' : 'rgba(8,16,26,0.78)',
+      stroke: isRoot ? 'rgba(143,217,240,0.65)' : 'rgba(95,195,232,' + (0.50 - (h.level - 1) * 0.07).toFixed(2) + ')',
+      'stroke-width': h.sw,
+    });
+    nodeLayer.appendChild(h.box);
+    h.text = el('text', { 'text-anchor': 'middle', 'font-size': h.fs });
+    h.text.textContent = h.label;
+    labelLayer.appendChild(h.text);
+  }
+
+  // Leaf visuals
+  for (const L of leaves) {
+    L.edge = el('line');
+    leafEdgeLayer.appendChild(L.edge);
+    L.dot = el('circle', { r: '2.2', fill: 'rgba(143,217,240,0.7)' });
+    nodeLayer.appendChild(L.dot);
+  }
+
+  // Runtime spawn — adds a single leaf with fade-in animation
+  function addLeaf(parent) {
+    const p = hubs[parent];
+    if (!p) return;
+    const L = {
+      parent,
+      x: p.x + (Math.random() - 0.5) * 55,
+      y: p.y + 30 + Math.random() * 25,
+      vx: 0, vy: 0,
+      flash: 0,
+      transfer: null,
+      spawnTimer: 32,
+    };
+    L.edge = el('line', { stroke: 'rgba(143,217,240,0)' });
+    leafEdgeLayer.appendChild(L.edge);
+    L.dot = el('circle', { r: '2.2', fill: 'rgba(180,235,255,0)' });
+    nodeLayer.appendChild(L.dot);
+    leaves.push(L);
+  }
+
+  // === Force simulation ===
+  function step() {
+    // Hubs: per-level pull + wander. Y-pull is much stronger so each level
+    // stays on its own horizontal stratum — clarifies the hierarchy.
+    for (const id in hubs) {
+      const n = hubs[id];
+      const v = LV[n.level];
+      n.vx += (n.hx - n.x) * v.pull;
+      n.vy += (n.hy - n.y) * v.pull * 3.0;
+      n.vx += (Math.random() - 0.5) * v.wander;
+      n.vy += (Math.random() - 0.5) * v.wander * 0.4; // less Y-jitter
+      n.vx *= 0.94; n.vy *= 0.94;
+      n.x += n.vx; n.y += n.vy;
+    }
+    // Hub-edge springs + glow decay (path-highlight cooldown)
+    for (const e of hubEdgeEls) {
+      const A = hubs[e.a], B = hubs[e.b];
+      const dx = B.x - A.x, dy = B.y - A.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const target = Math.hypot(B.hx - A.hx, B.hy - A.hy);
+      const f = (d - target) * 0.0008;
+      const ux = dx / d, uy = dy / d;
+      A.vx += ux * f; A.vy += uy * f;
+      B.vx -= ux * f; B.vy -= uy * f;
+      if (e.glow > 0) e.glow = Math.max(0, e.glow - 1 / 110); // ~1.8s decay
+    }
+    // Leaves: transfer state machine OR spring + sibling repulsion + wander
+    for (let i = 0; i < leaves.length; i++) {
+      const L = leaves[i];
+      // Long-distance transfer: fade out → teleport → fade in (skip physics during fade)
+      if (L.transfer) {
+        L.transfer.timer--;
+        if (L.transfer.timer <= 0) {
+          if (L.transfer.phase === 'out') {
+            const P = hubs[L.transfer.newParent];
+            L.parent = L.transfer.newParent;
+            L.x = P.x + (Math.random() - 0.5) * 45;
+            L.y = P.y + 28 + Math.random() * 22;
+            L.vx = 0; L.vy = 0;
+            L.transfer.phase = 'in';
+            L.transfer.timer = 28;
+          } else {
+            L.transfer = null;
+          }
+        }
+        continue;
+      }
+      // Normal physics
+      const P = hubs[L.parent];
+      const dx = P.x - L.x, dy = P.y - L.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const targetLen = 40;
+      const f = (d - targetLen) * 0.010;
+      L.vx += dx / d * f; L.vy += dy / d * f;
+      // Cheap sibling repulsion (O(n²) but n ≤ 20)
+      for (let j = 0; j < leaves.length; j++) {
+        if (j === i) continue;
+        const O = leaves[j];
+        if (O.transfer) continue;
+        const ox = L.x - O.x, oy = L.y - O.y;
+        const od2 = ox * ox + oy * oy;
+        if (od2 < 360 && od2 > 0.1) {
+          const od = Math.sqrt(od2);
+          const f2 = 7 / od2;
+          L.vx += ox / od * f2; L.vy += oy / od * f2;
+        }
+      }
+      // Wander + friction
+      L.vx += (Math.random() - 0.5) * 0.07;
+      L.vy += (Math.random() - 0.5) * 0.07;
+      L.vx *= 0.88; L.vy *= 0.88;
+      L.x += L.vx; L.y += L.vy;
+      if (L.flash > 0) L.flash = Math.max(0, L.flash - 1 / 90);
+      if (L.spawnTimer > 0) L.spawnTimer--;
+    }
+  }
+
+  // === Render ===
+  function render() {
+    for (const e of hubEdgeEls) {
+      const A = hubs[e.a], B = hubs[e.b];
+      e.el.setAttribute('x1', A.x); e.el.setAttribute('y1', A.y);
+      e.el.setAttribute('x2', B.x); e.el.setAttribute('y2', B.y);
+      // Base styling + gentle glow boost when this edge is on a recent transfer chain
+      const g = e.glow;
+      const opa = Math.min(0.8, e.baseOpa + g * 0.32);
+      const sw  = e.baseW + g * 0.55;
+      e.el.setAttribute('stroke', 'rgba(95,195,232,' + opa.toFixed(2) + ')');
+      e.el.setAttribute('stroke-width', sw.toFixed(2));
+    }
+    for (const id in hubs) {
+      const h = hubs[id];
+      h.box.setAttribute('x', h.x - h.w / 2);
+      h.box.setAttribute('y', h.y - h.ht / 2);
+      h.text.setAttribute('x', h.x);
+      h.text.setAttribute('y', h.y - h.ht / 2 - 4);
+      if (h.halo) {
+        h.halo.setAttribute('x', h.x - (h.w + 20) / 2);
+        h.halo.setAttribute('y', h.y - (h.ht + 14) / 2);
+      }
+    }
+    for (const L of leaves) {
+      const P = hubs[L.parent];
+      L.edge.setAttribute('x1', P.x); L.edge.setAttribute('y1', P.y);
+      L.edge.setAttribute('x2', L.x); L.edge.setAttribute('y2', L.y);
+      L.dot.setAttribute('cx', L.x); L.dot.setAttribute('cy', L.y);
+      if (L.transfer) {
+        const dur = L.transfer.phase === 'out' ? 30 : 28;
+        const t = 1 - L.transfer.timer / dur; // 0 → 1
+        if (L.transfer.phase === 'out') {
+          const opa = 0.55 * (1 - t);
+          L.dot.setAttribute('r', '2.0');
+          L.dot.setAttribute('fill', 'rgba(143,217,240,' + opa.toFixed(2) + ')');
+          L.edge.setAttribute('stroke', 'rgba(95,195,232,' + (opa * 0.12).toFixed(2) + ')');
+        } else {
+          const opa = 0.55 * t;
+          L.dot.setAttribute('r', (2.0 + (1 - t) * 1.6).toFixed(2));
+          L.dot.setAttribute('fill', 'rgba(143,217,240,' + Math.max(opa, 0.05).toFixed(2) + ')');
+          L.edge.setAttribute('stroke', 'rgba(95,195,232,' + (opa * 0.22).toFixed(2) + ')');
+        }
+      } else if (L.spawnTimer > 0) {
+        const t = 1 - L.spawnTimer / 32; // 0 → 1
+        const opa = 0.55 * t;
+        L.dot.setAttribute('r', (2.0 + (1 - t) * 1.8).toFixed(2));
+        L.dot.setAttribute('fill', 'rgba(143,217,240,' + Math.max(opa, 0.05).toFixed(2) + ')');
+        L.edge.setAttribute('stroke', 'rgba(95,195,232,' + (opa * 0.18).toFixed(2) + ')');
+      } else if (L.flash > 0) {
+        const t = L.flash;
+        L.dot.setAttribute('r', (2.0 + t * 1.6).toFixed(2));
+        L.dot.setAttribute('fill', 'rgba(143,217,240,' + (0.55 + t * 0.20).toFixed(2) + ')');
+        L.edge.setAttribute('stroke', 'rgba(95,195,232,' + (0.08 + t * 0.18).toFixed(2) + ')');
+      } else {
+        L.dot.setAttribute('r', '2.0');
+        L.dot.setAttribute('fill', 'rgba(143,217,240,0.55)');
+        L.edge.setAttribute('stroke', 'rgba(95,195,232,0.08)');
+      }
+    }
+  }
+
+  // === Main loop ===
+  let running = true;
+  function loop() {
+    if (!running) return;
+    step(); render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) running = false;
+    else if (!running) { running = true; requestAnimationFrame(loop); }
+  });
+
+  // === Periodic ownership transfers ===
+  // Two flavors:
+  //  - LOCAL: slot ↔ slot within the same side of the screen, played as visible
+  //    physical flight (spring pulls the leaf along its edge to the new parent).
+  //  - CROSS: long-distance moves through the central content column —
+  //    rendered as fade-out → teleport → fade-in to avoid the screen-crossing line.
+  const transferRules = [
+    // Player slot ↔ slot (left side, visible flight)
+    { from: 'pda',      to: ['backpack'] },
+    { from: 'backpack', to: ['pda'] },
+    { from: 'pda',      to: ['weapon'] },
+    { from: 'weapon',   to: ['pda'] },
+    { from: 'backpack', to: ['weapon'] },
+    { from: 'weapon',   to: ['backpack'] },
+    // NPC slot ↔ slot (left side, visible flight)
+    { from: 'luggage',  to: ['weapon'] },
+    { from: 'weapon',   to: ['luggage'] },
+    { from: 'luggage',  to: ['backpack'] },
+    { from: 'backpack', to: ['luggage'] },
+    // World slot ↔ slot (right side, visible flight)
+    { from: 'pickups',  to: ['suitcase'] },
+    { from: 'suitcase', to: ['pickups'] },
+    { from: 'pickups',  to: ['quest'] },
+    { from: 'quest',    to: ['pickups'] },
+    { from: 'suitcase', to: ['quest'] },
+    { from: 'quest',    to: ['suitcase'] },
+    // Cross-content (rarer — handled via fade-teleport)
+    { from: 'pickups',  to: ['backpack', 'luggage'] },
+    { from: 'backpack', to: ['pickups'] },
+    { from: 'luggage',  to: ['pickups'] },
+    { from: 'suitcase', to: ['backpack'] },
+    { from: 'quest',    to: ['backpack'] },
+  ];
+  // Threshold bumped so within-side transfers (PDA↔WEAPON, PICKUPS↔QUEST etc.)
+  // play as smooth flights; only true L↔R crossings teleport.
+  const TELEPORT_DIST = 600;
+  function doTransfer() {
+    const rule = transferRules[Math.floor(Math.random() * transferRules.length)];
+    const candidates = leaves.filter(L => L.parent === rule.from && !L.transfer && !L.spawnTimer);
+    if (candidates.length === 0) return;
+    const L = candidates[Math.floor(Math.random() * candidates.length)];
+    const newParent = rule.to[Math.floor(Math.random() * rule.to.length)];
+    const A = hubs[L.parent], B = hubs[newParent];
+    const dist = Math.hypot(B.hx - A.hx, B.hy - A.hy);
+    if (dist > TELEPORT_DIST) {
+      L.transfer = { phase: 'out', timer: 30, newParent };
+    } else {
+      L.parent = newParent;
+      L.flash = 1.0;
+    }
+    // Light up the full ancestor chain ROOT → ... → newParent so the depth
+    // of nesting reads visually: the path tells the reader where the item now lives.
+    for (const [p, c] of ancestorEdges(newParent)) {
+      const edge = edgeIndex[p + '>' + c];
+      if (edge) edge.glow = 1.0;
+    }
+  }
+  setInterval(doTransfer, 2400);
+
+  // === Progressive spawn on scroll (one-way: items accumulate, never disappear) ===
+  // Each threshold fires once when scroll progress first reaches it.
+  // New leaves appear at their parent with a soft fade-in.
+  const spawnSchedule = [
+    { at: 0.08, parent: 'pickups',  count: 2 },
+    { at: 0.15, parent: 'luggage',  count: 2 },
+    { at: 0.22, parent: 'backpack', count: 1 },
+    { at: 0.30, parent: 'suitcase', count: 2 },
+    { at: 0.38, parent: 'pickups',  count: 2 },
+    { at: 0.46, parent: 'luggage',  count: 2 },
+    { at: 0.54, parent: 'quest',    count: 2 },
+    { at: 0.62, parent: 'pickups',  count: 3 },
+    { at: 0.70, parent: 'backpack', count: 2 },
+    { at: 0.78, parent: 'suitcase', count: 2 },
+    { at: 0.86, parent: 'luggage',  count: 3 },
+    { at: 0.94, parent: 'pickups',  count: 3 },
+  ];
+  let maxProgress = 0;
+
+  function onScroll() {
+    const docH = (document.documentElement.scrollHeight || 0) - window.innerHeight;
+    if (docH <= 0) return;
+    const p = Math.max(0, Math.min(1, window.scrollY / docH));
+    if (p <= maxProgress) return;
+    maxProgress = p;
+    for (const s of spawnSchedule) {
+      if (!s._fired && maxProgress >= s.at) {
+        s._fired = true;
+        // Stagger the count across a short window so the same threshold
+        // doesn't pop all leaves on the same frame.
+        for (let i = 0; i < s.count; i++) {
+          setTimeout(() => addLeaf(s.parent), i * 220);
+        }
+      }
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  // Handle preserved scroll on reload — fires any thresholds already passed.
+  requestAnimationFrame(onScroll);
+})();
+</script>
+
+</body>
+</html>
