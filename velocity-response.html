@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velocity Response · движение персонажа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050810;
+    --bg-elev: #08101a;
+    --bg-card: #0a1422;
+    --bg-panel: #0f1a2a;
+    --text: #d4dde6;
+    --text-muted: #8a98a8;
+    --text-faint: #5e6b7a;
+    --border: #1a2638;
+    --border-hard: #243348;
+    --accent: #5fc3e8;
+    --accent-bright: #8fd9f0;
+    --good: #6dc99a;
+    --warn: #e8c447;
+    --danger: #e87045;
+    --pink: #f05f7a;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(143,217,240,0.015) 2px, rgba(143,217,240,0.015) 3px);
+    pointer-events: none; z-index: 1000;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 28% 12%, rgba(95,195,232,0.07) 0%, transparent 44%),
+                radial-gradient(ellipse at 74% 55%, rgba(232,196,71,0.035) 0%, transparent 42%),
+                radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.68) 100%);
+    pointer-events: none; z-index: 999;
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .schematic-bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.52;
+  }
+  .frame { max-width: 980px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2; }
+  @media (max-width: 700px) { .frame { padding: 0 20px; } }
+
+  .topbar {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg) 100%);
+    position: relative;
+    z-index: 2;
+  }
+  .topbar .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .topbar .dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--accent); border-radius: 50%;
+    margin-right: 8px; vertical-align: middle;
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .topbar .classification { color: var(--accent); font-weight: 600; }
+
+  @media (max-width: 560px) {
+    .topbar { letter-spacing: 0.08em; }
+    .topbar .row { display: block; }
+    .topbar .row span { display: block; margin: 2px 0; }
+  }
+
+  main { padding: 64px 0 96px 0; }
+  header.dossier { margin-bottom: 72px; position: relative; padding-left: 24px; }
+  header.dossier::before {
+    content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 3px; background: var(--accent);
+  }
+  header.dossier .stamp {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  header.dossier h1 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: clamp(34px, 5.5vw, 56px);
+    line-height: 1.05;
+    margin: 0 0 20px 0;
+    letter-spacing: -0.03em;
+  }
+  header.dossier h1 .accent { color: var(--accent); }
+  header.dossier .lede {
+    font-size: 19px;
+    color: var(--text-muted);
+    max-width: 700px;
+    margin: 0;
+  }
+
+  section { margin-bottom: 86px; scroll-margin-top: 24px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .section-head .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+  }
+  .section-head h2 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 25px;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .section-head h2 .accent { color: var(--accent); }
+  p { margin: 0 0 14px 0; }
+  p.muted { color: var(--text-muted); }
+  p.big { font-size: 19px; line-height: 1.55; }
+  strong { color: var(--accent-bright); font-weight: 700; }
+
+  .hero-visual {
+    margin-top: 34px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(15,26,42,0.72), rgba(8,16,26,0.72));
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-visual::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .cards.two { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 820px) {
+    .cards, .cards.two { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: rgba(10,20,34,0.78);
+    border: 1px solid var(--border);
+    padding: 20px 22px;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 15px;
+    height: 15px;
+    border-top: 2px solid var(--accent);
+    border-left: 2px solid var(--accent);
+  }
+  .card .kicker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+  .card h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  .diagram {
+    border: 1px solid var(--border);
+    background:
+      linear-gradient(180deg, rgba(15,26,42,0.62), rgba(8,16,26,0.78)),
+      repeating-linear-gradient(90deg, transparent 0, transparent 69px, rgba(95,195,232,0.035) 70px);
+    padding: 24px;
+    margin: 24px 0;
+    position: relative;
+  }
+
+  @media (max-width: 560px) {
+    header.dossier { padding-left: 18px; margin-bottom: 56px; }
+    header.dossier .lede { font-size: 17px; }
+    .hero-visual, .diagram { padding: 16px; }
+    .diagram-title { font-size: 10px; }
+    section { margin-bottom: 68px; }
+  }
+  .diagram-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .diagram-title .accent { color: var(--accent); }
+  .chart {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .axis { stroke: rgba(212,221,230,0.25); stroke-width: 1; }
+  .grid { stroke: rgba(212,221,230,0.06); stroke-width: 1; }
+  .stock { fill: none; stroke: rgba(138,152,168,0.58); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+  .response { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 7px rgba(95,195,232,0.28)); }
+  .camera { fill: none; stroke: rgba(138,152,168,0.76); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+  .camera-soft { fill: none; stroke: rgba(138,152,168,0.28); stroke-width: 12; stroke-linejoin: round; stroke-linecap: round; }
+  .camera-noise { fill: none; stroke: rgba(212,221,230,0.46); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .input-fill { fill: rgba(109,201,154,0.18); }
+  .accel-fill { fill: rgba(240,95,122,0.18); }
+  .cap { stroke: rgba(232,196,71,0.34); stroke-width: 2; stroke-dasharray: 8 8; }
+  .label {
+    font-family: var(--mono);
+    font-size: 12px;
+    fill: var(--text-muted);
+  }
+  .label-strong {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--accent-bright);
+  }
+  .label-good { fill: var(--good); }
+  .label-warn { fill: var(--warn); }
+  .label-danger { fill: var(--danger); }
+
+  .flow {
+    display: grid;
+    grid-template-columns: 1fr 56px 1.2fr 56px 1fr;
+    gap: 0;
+    align-items: center;
+    margin: 24px 0;
+  }
+  @media (max-width: 820px) { .flow { grid-template-columns: 1fr; gap: 12px; } .arrow { transform: rotate(90deg); margin: 0 auto; } }
+  .flow-box {
+    min-height: 132px;
+    border: 1px solid var(--border);
+    background: rgba(10,20,34,0.74);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+  .flow-box .icon {
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .flow-box h3 { margin: 0 0 8px 0; font-size: 18px; }
+  .flow-box p { margin: 0; color: var(--text-muted); font-size: 14px; }
+  .arrow {
+    font-family: var(--mono);
+    color: var(--accent);
+    text-align: center;
+    font-size: 28px;
+    opacity: 0.75;
+  }
+
+  .stance-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 14px;
+    align-items: center;
+    margin: 14px 0;
+  }
+  @media (max-width: 620px) { .stance-row { grid-template-columns: 1fr; } }
+  .stance-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .bar {
+    height: 42px;
+    border: 1px solid var(--border);
+    background: rgba(10,20,34,0.8);
+    position: relative;
+    overflow: hidden;
+  }
+  .bar span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: block;
+    background: linear-gradient(90deg, rgba(95,195,232,0.24), rgba(95,195,232,0.72));
+  }
+  .bar .txt {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .bar.warn span { background: linear-gradient(90deg, rgba(232,196,71,0.18), rgba(232,196,71,0.62)); }
+  .bar.good span { background: linear-gradient(90deg, rgba(109,201,154,0.17), rgba(109,201,154,0.58)); }
+
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 24px;
+  }
+  @media (max-width: 900px) { .pillars { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .pillars { grid-template-columns: 1fr; } }
+  .pillar {
+    border: 1px solid var(--border);
+    background: rgba(10,20,34,0.76);
+    padding: 18px 18px 16px 18px;
+  }
+  .pillar .mark {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(95,195,232,0.38);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .pillar h3 { margin: 0 0 8px 0; font-size: 16px; }
+  .pillar p { color: var(--text-muted); font-size: 14px; margin: 0; }
+
+  .callout {
+    padding: 18px 22px;
+    margin: 24px 0;
+    background: rgba(10,20,34,0.84);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+  }
+  .callout .label {
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0;
+    color: var(--text-faint);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+<svg class="schematic-bg" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="lineGrad" x1="0" x2="1">
+      <stop offset="0" stop-color="#5fc3e8" stop-opacity="0.05"/>
+      <stop offset="0.55" stop-color="#5fc3e8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#e8c447" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <path d="M110 680 C250 600 210 400 390 365 C610 322 690 245 850 245 C1030 245 1110 375 1290 312" fill="none" stroke="url(#lineGrad)" stroke-width="2"/>
+  <path d="M-40 560 C220 510 270 760 500 690 C700 630 740 450 960 480 C1150 505 1190 650 1460 595" fill="none" stroke="url(#lineGrad)" stroke-width="1.5"/>
+  <path d="M120 220 L360 220 L360 430 L720 430 L720 260 L1120 260" fill="none" stroke="#5fc3e8" stroke-opacity="0.06" stroke-width="2"/>
+  <circle cx="390" cy="365" r="5" fill="#5fc3e8" opacity="0.22"/>
+  <circle cx="850" cy="245" r="5" fill="#e8c447" opacity="0.18"/>
+  <circle cx="960" cy="480" r="5" fill="#6dc99a" opacity="0.18"/>
+</svg>
+
+<div class="topbar">
+  <div class="frame">
+    <div class="row">
+      <span><span class="dot"></span>Movement Feel Brief</span>
+      <span class="classification">Velocity Response</span>
+    </div>
+  </div>
+</div>
+
+<main class="frame">
+  <header class="dossier">
+    <div class="stamp">BorderLine · movement feel</div>
+    <h1>Velocity <span class="accent">Response</span></h1>
+    <p class="lede">
+      Слой, который превращает “математически правильное” движение в движение, которое легче читать глазами:
+      старт, стоп и поворот получают форму, а не выглядят как сухие прямые линии.
+    </p>
+    <div class="hero-visual">
+      <svg class="chart" viewBox="0 0 900 300" role="img" aria-label="Сравнение stock speed и velocity response">
+        <line class="grid" x1="70" y1="70" x2="850" y2="70"/>
+        <line class="grid" x1="70" y1="140" x2="850" y2="140"/>
+        <line class="grid" x1="70" y1="210" x2="850" y2="210"/>
+        <line class="axis" x1="70" y1="250" x2="850" y2="250"/>
+        <line class="axis" x1="70" y1="40" x2="70" y2="250"/>
+        <line class="cap" x1="70" y1="82" x2="850" y2="82"/>
+        <path class="stock" d="M90 250 L240 82 L430 82 L560 250 L680 250 L790 82 L850 82"/>
+        <path class="response" d="M90 250 C130 242 168 156 240 92 C300 76 370 82 430 82 C470 88 516 190 560 250 C610 255 650 253 680 250 C710 202 742 110 790 88 C810 82 832 82 850 82"/>
+        <text class="label" x="78" y="282">time</text>
+        <text class="label" x="770" y="282">now</text>
+        <text class="label-warn label" x="745" y="73">cap</text>
+        <text class="label" x="92" y="54">stock</text>
+        <text class="label-strong" x="170" y="132">response shape</text>
+      </svg>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head"><span class="num">01</span><h2>Какую проблему <span class="accent">решаем</span></h2></div>
+    <p class="big">
+      В stock movement скорость часто выглядит как ровный подъём, ровная полка и ровный спад.
+      Скелетная камера добавляла живой экранный сигнал, но сама скорость тела всё ещё могла оставаться слишком “рельсовой”.
+    </p>
+    <div class="cards">
+      <div class="card">
+        <div class="kicker">start</div>
+        <h3>Разгон слишком линейный</h3>
+        <p>Игрок сразу видит искусственную прямую: скорость растёт без характера.</p>
+      </div>
+      <div class="card">
+        <div class="kicker">stop</div>
+        <h3>Остановка без веса</h3>
+        <p>Торможение не рассказывает, где инерция, а где усилие персонажа.</p>
+      </div>
+      <div class="card">
+        <div class="kicker">turn</div>
+        <h3>Поворот не стоит скорости</h3>
+        <p>Спринт на 90° может сохранять cap, из-за чего тело выглядит слишком послушным.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">02</span><h2>Что такое <span class="accent">Velocity Response</span></h2></div>
+    <p class="big">
+      Это не новая система движения. Это opt-in слой поверх текущего Character Movement:
+      вход и базовые лимиты остаются теми же, меняется только форма ответа скорости.
+    </p>
+    <div class="flow">
+      <div class="flow-box">
+        <div class="icon">W</div>
+        <h3>Input</h3>
+        <p>Игрок жмёт движение, sprint, crouch, поворачивает камеру.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="flow-box">
+        <div class="icon">≈</div>
+        <h3>Response layer</h3>
+        <p>Форма разгона, торможения и поворота выбирается по текущему состоянию.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="flow-box">
+        <div class="icon">↗</div>
+        <h3>Velocity</h3>
+        <p>На выходе всё ещё настоящая скорость персонажа, без fake smoothing.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="label">важно</span>
+      <p>
+        По умолчанию поведение старое. Velocity Response включается отдельным master switch, чтобы эксперимент можно было сравнивать честно.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>Камера: <span class="accent">сглаженная, но живая</span></h2></div>
+    <p class="big">
+      Камера привязана к скелету. Поэтому она уже частично делала движение приятнее:
+      давала крупную сглаженную форму, но вместе с этим приносила небольшой шум от скелета.
+      Это полезный слой ощущения, но не замена честной реакции скорости персонажа.
+    </p>
+    <div class="diagram">
+      <div class="diagram-title"><span>Skeleton-bound camera</span><span class="accent">плавная форма + небольшой шум</span></div>
+      <svg class="chart" viewBox="0 0 900 380" role="img" aria-label="Камера привязана к скелету: сглаженная форма и небольшой шум">
+        <line class="axis" x1="78" y1="160" x2="838" y2="160"/>
+        <line class="axis" x1="78" y1="316" x2="838" y2="316"/>
+        <line class="grid" x1="78" y1="72" x2="838" y2="72"/>
+        <line class="grid" x1="78" y1="228" x2="838" y2="228"/>
+        <line class="cap" x1="78" y1="66" x2="838" y2="66"/>
+        <path class="response" d="M88 160 L210 66 L382 66 L455 66 L530 66 L615 160 L718 160"/>
+        <path class="camera-soft" d="M88 316 C136 311 170 254 228 214 C278 178 348 181 414 184 C478 188 520 222 565 270 C604 311 654 317 718 316"/>
+        <path class="camera" d="M88 316 C136 311 170 254 228 214 C278 178 348 181 414 184 C478 188 520 222 565 270 C604 311 654 317 718 316"/>
+        <path class="camera-noise" d="M88 316 C122 310 145 280 170 251 C183 238 193 226 206 218 C218 212 226 218 238 209 C251 199 262 185 278 181 C293 178 306 185 320 181 C336 176 350 180 365 184 C382 189 397 179 414 184 C431 189 445 187 462 193 C478 199 493 213 508 226 C522 238 533 258 548 268 C562 278 575 270 590 286 C606 304 622 313 642 316 C668 320 690 313 718 316"/>
+        <path d="M455 170 L455 54" stroke="#e8c447" stroke-width="2" stroke-opacity="0.35" stroke-dasharray="8 8"/>
+        <path d="M455 326 L455 210" stroke="#e8c447" stroke-width="2" stroke-opacity="0.20" stroke-dasharray="8 8"/>
+        <rect class="input-fill" x="88" y="170" width="365" height="24"/>
+        <rect class="input-fill" x="455" y="170" width="210" height="24"/>
+        <text class="label-strong" x="84" y="42">скорость тела</text>
+        <text class="label" x="548" y="58">тело всё ещё держит cap</text>
+        <text class="label-warn label" x="470" y="108">camera turn</text>
+        <text class="label" x="84" y="208">скорость камеры от скелета</text>
+        <text class="label-strong" x="236" y="230">крупная плавная форма</text>
+        <text class="label" x="500" y="292">мелкий шум</text>
+      </svg>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="kicker">camera can</div>
+        <h3>Дать живую инерцию</h3>
+        <p>Скелетная камера смягчает крупную форму и добавляет маленькую физическую дрожь.</p>
+      </div>
+      <div class="card">
+        <div class="kicker">camera cannot</div>
+        <h3>Изменить тело</h3>
+        <p>Если pawn бесплатно сохраняет скорость в повороте, камера не создаёт настоящую цену поворота.</p>
+      </div>
+      <div class="card">
+        <div class="kicker">risk</div>
+        <h3>Смешанный сигнал</h3>
+        <p>Шум камеры может выглядеть как feel, но скорость персонажа всё ещё может оставаться слишком линейной.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">04</span><h2>Разгон: <span class="accent">меньше линейки</span></h2></div>
+    <p class="big">
+      Разгон больше не обязан быть идеально прямым. На старте персонаж быстро подтверждает input,
+      а ближе к cap разгон становится спокойнее.
+    </p>
+    <div class="diagram">
+      <div class="diagram-title"><span>Acceleration shape</span><span class="accent">input accepted → speed settles</span></div>
+      <svg class="chart" viewBox="0 0 900 260" role="img" aria-label="Форма разгона">
+        <rect class="input-fill" x="82" y="205" width="635" height="26"/>
+        <line class="axis" x1="70" y1="232" x2="850" y2="232"/>
+        <line class="axis" x1="70" y1="38" x2="70" y2="232"/>
+        <line class="grid" x1="70" y1="86" x2="850" y2="86"/>
+        <line class="grid" x1="70" y1="144" x2="850" y2="144"/>
+        <line class="cap" x1="70" y1="64" x2="850" y2="64"/>
+        <path class="stock" d="M82 232 L342 64 L717 64"/>
+        <path class="response" d="M82 232 C130 224 180 151 250 91 C304 55 377 64 450 64 L717 64"/>
+        <text class="label-good label" x="94" y="223">input held</text>
+        <text class="label" x="364" y="112">stock ramp</text>
+        <text class="label-strong" x="225" y="84">response ramp</text>
+        <text class="label-warn label" x="762" y="68">max speed</text>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">05</span><h2>Торможение: <span class="accent">ease-in</span></h2></div>
+    <p class="big">
+      После отпускания input персонаж сначала сохраняет инерцию, а ближе к концу сильнее дожимает остановку.
+      Это меняет ощущение веса, но целевой тайминг должен оставаться близким к прежнему.
+    </p>
+    <div class="diagram">
+      <div class="diagram-title"><span>Brake shape</span><span class="accent">soft start → stronger finish</span></div>
+      <svg class="chart" viewBox="0 0 900 280" role="img" aria-label="Форма торможения ease-in">
+        <rect class="input-fill" x="80" y="225" width="275" height="26"/>
+        <rect class="accel-fill" x="355" y="168" width="248" height="83"/>
+        <line class="axis" x1="70" y1="252" x2="850" y2="252"/>
+        <line class="axis" x1="70" y1="40" x2="70" y2="252"/>
+        <line class="grid" x1="70" y1="90" x2="850" y2="90"/>
+        <line class="grid" x1="70" y1="160" x2="850" y2="160"/>
+        <path class="stock" d="M82 78 L355 78 L603 252"/>
+        <path class="response" d="M82 78 C145 75 285 78 355 78 C408 88 472 139 522 208 C548 237 574 251 603 252"/>
+        <text class="label-good label" x="96" y="243">input</text>
+        <text class="label-danger label" x="378" y="185">brake effort</text>
+        <text class="label-strong" x="412" y="113">сначала мягче</text>
+        <text class="label-strong" x="530" y="236">в конце сильнее</text>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">06</span><h2>Поворот: <span class="accent">скорость платит за угол</span></h2></div>
+    <p class="big">
+      Если спринтер резко меняет направление, тело не должно бесплатно оставаться на cap.
+      Чем больше конфликт между текущей скоростью и новым направлением движения, тем сильнее response.
+    </p>
+    <div class="diagram">
+      <div class="diagram-title"><span>Turn response</span><span class="accent">forward sprint → 90° camera turn</span></div>
+      <svg class="chart" viewBox="0 0 900 330" role="img" aria-label="Поворот с потерей скорости">
+        <line class="axis" x1="80" y1="270" x2="840" y2="270"/>
+        <line class="axis" x1="80" y1="46" x2="80" y2="270"/>
+        <line class="grid" x1="80" y1="100" x2="840" y2="100"/>
+        <line class="grid" x1="80" y1="170" x2="840" y2="170"/>
+        <line class="cap" x1="80" y1="82" x2="840" y2="82"/>
+        <path class="stock" d="M92 82 L355 82 L482 82 L680 82"/>
+        <path class="response" d="M92 82 C180 78 285 82 355 82 C380 86 400 118 419 157 C438 195 466 222 505 228 C563 229 618 153 680 86"/>
+        <path d="M355 272 L355 54" stroke="#e8c447" stroke-width="2" stroke-opacity="0.3" stroke-dasharray="8 8"/>
+        <path d="M160 220 L272 220" stroke="#5fc3e8" stroke-width="8" stroke-linecap="round"/>
+        <path d="M272 220 L272 110" stroke="#e8c447" stroke-width="8" stroke-linecap="round"/>
+        <path d="M272 220 L258 190 M272 220 L302 206" stroke="#e8c447" stroke-width="5" stroke-linecap="round"/>
+        <path d="M160 220 L190 206 M160 220 L190 234" stroke="#5fc3e8" stroke-width="5" stroke-linecap="round"/>
+        <text class="label" x="142" y="247">old velocity</text>
+        <text class="label-warn label" x="294" y="127">new input</text>
+        <text class="label-strong" x="378" y="146">speed dip</text>
+        <text class="label" x="550" y="72">stock keeps cap</text>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">07</span><h2>Stance-aware: <span class="accent">состояние меняет вес</span></h2></div>
+    <p class="big">
+      Walk, sprint и crouch не должны ощущаться одинаковым телом с разным cap.
+      Velocity Response даёт каждому состоянию свою реакцию.
+    </p>
+    <div class="diagram">
+      <div class="diagram-title"><span>Stance response</span><span class="accent">same input, different body language</span></div>
+      <div class="stance-row">
+        <div class="stance-name">walk</div>
+        <div class="bar"><span style="width: 64%"></span><div class="txt">нейтральная реакция, базовая управляемость</div></div>
+      </div>
+      <div class="stance-row">
+        <div class="stance-name">sprint</div>
+        <div class="bar warn"><span style="width: 88%"></span><div class="txt">больше инерции и заметнее цена резкого поворота</div></div>
+      </div>
+      <div class="stance-row">
+        <div class="stance-name">crouch</div>
+        <div class="bar good"><span style="width: 47%"></span><div class="txt">ниже скорость, спокойнее поворот, больше контроля</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">08</span><h2>Как мы это <span class="accent">проверяем</span></h2></div>
+    <p class="big">
+      Debug graph показывает ground truth: скорость персонажа, скорость камеры, input, acceleration, max speed и угол поворота.
+      Это нужно именно для разделения: где меняется тело, а где мы видим движение скелетной камеры.
+    </p>
+    <div class="diagram">
+      <div class="diagram-title"><span>Debug readout</span><span class="accent">4 seconds of motion</span></div>
+      <svg class="chart" viewBox="0 0 900 360" role="img" aria-label="Debug graph">
+        <rect x="52" y="35" width="790" height="272" fill="rgba(0,0,0,0.24)" stroke="rgba(212,221,230,0.18)"/>
+        <line class="grid" x1="88" y1="90" x2="820" y2="90"/>
+        <line class="grid" x1="88" y1="150" x2="820" y2="150"/>
+        <line class="grid" x1="88" y1="210" x2="820" y2="210"/>
+        <line class="axis" x1="88" y1="250" x2="820" y2="250"/>
+        <line class="cap" x1="88" y1="112" x2="820" y2="112"/>
+        <path class="response" d="M90 250 C122 248 145 170 190 102 C230 72 314 82 365 82 C410 86 444 172 496 235 C522 257 560 251 590 250 C630 210 662 108 710 84 C742 74 782 82 820 82"/>
+        <path d="M90 126 C150 120 240 126 365 124 C438 130 474 224 496 235 C525 250 560 245 590 239 C632 220 682 126 820 126" fill="none" stroke="rgba(138,152,168,0.62)" stroke-width="3"/>
+        <rect class="input-fill" x="88" y="262" width="286" height="22"/>
+        <rect class="input-fill" x="585" y="262" width="232" height="22"/>
+        <rect class="accel-fill" x="370" y="292" width="126" height="24"/>
+        <rect class="accel-fill" x="706" y="292" width="114" height="24"/>
+        <text class="label-strong" x="70" y="28">speed</text>
+        <text class="label" x="695" y="105">max speed</text>
+        <text class="label-good label" x="94" y="279">input</text>
+        <text class="label-danger label" x="378" y="310">accel/brake</text>
+        <text class="label" x="720" y="344">now</text>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">09</span><h2>Правила для <span class="accent">настройки</span></h2></div>
+    <p class="big">
+      Мы не ищем “красивую кривую” отдельно от игры. Кривая должна помогать игроку понимать тело персонажа.
+    </p>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="mark">1</div>
+        <h3>Без лжи</h3>
+        <p>Граф и CSV показывают настоящую скорость, без cosmetic smoothing.</p>
+      </div>
+      <div class="pillar">
+        <div class="mark">2</div>
+        <h3>Без скачков</h3>
+        <p>Функции должны быть гладкими и непрерывными, чтобы управление не ломалось.</p>
+      </div>
+      <div class="pillar">
+        <div class="mark">3</div>
+        <h3>Без сюрпризов</h3>
+        <p>Включается master switch. Старое поведение остаётся доступным для сравнения.</p>
+      </div>
+      <div class="pillar">
+        <div class="mark">4</div>
+        <h3>По ощущениям</h3>
+        <p>Меняем форму, затем проверяем capture и playtest, а не спорим по числам в вакууме.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">10</span><h2>Итог: <span class="accent">что должно почувствоваться</span></h2></div>
+    <div class="cards two">
+      <div class="card">
+        <div class="kicker">player-facing</div>
+        <h3>Персонаж стал телом, а не курсором</h3>
+        <p>Разгон, стоп и поворот дают читаемый вес в самой скорости, а камера остаётся живым presentation-слоем.</p>
+      </div>
+      <div class="card">
+        <div class="kicker">team-facing</div>
+        <h3>Настройка стала измеримой</h3>
+        <p>Каждый спор про feel можно привязать к capture: скорость, input, acceleration, turn angle.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="label">коротко</span>
+      <p>
+        Velocity Response не делает персонажа медленнее сам по себе. Он делает изменение скорости выразительным:
+        старт, стоп и поворот начинают рассказывать игроку, что происходит с телом.
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="frame">BorderLine · Velocity Response · internal presentation</div>
+</footer>
+</body>
+</html>
