@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Vector Graphics</title>
+  <desc id="desc">A cheerful yellow vector mascot spreads its hands under a rainbow labeled Vector Graphics.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080d16"/>
+      <stop offset=".55" stop-color="#11182a"/>
+      <stop offset="1" stop-color="#080a11"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff36a"/>
+      <stop offset="1" stop-color="#e8b91f"/>
+    </linearGradient>
+    <linearGradient id="type" x1="420" y1="0" x2="1180" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5ee7ff"/>
+      <stop offset=".3" stop-color="#8d75ff"/>
+      <stop offset=".6" stop-color="#ff6a9e"/>
+      <stop offset="1" stop-color="#ffc768"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#7da5c8" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".45"/>
+    </filter>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <circle cx="800" cy="565" r="430" fill="#436b99" opacity=".08"/>
+  <circle cx="800" cy="565" r="310" fill="#5ee7ff" opacity=".05"/>
+
+  <g fill="none" stroke-linecap="round" filter="url(#glow)">
+    <path d="M395 430C515 145 1085 145 1205 430" stroke="#ff666e" stroke-width="32"/>
+    <path d="M425 438C535 188 1065 188 1175 438" stroke="#ffad4e" stroke-width="32"/>
+    <path d="M458 446C555 230 1045 230 1142 446" stroke="#ffe166" stroke-width="32"/>
+    <path d="M493 453C580 270 1020 270 1107 453" stroke="#68e59b" stroke-width="32"/>
+    <path d="M530 460C610 307 990 307 1070 460" stroke="#5ee7ff" stroke-width="32"/>
+    <path d="M568 467C640 343 960 343 1032 467" stroke="#9b73ff" stroke-width="32"/>
+  </g>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" text-anchor="middle">
+    <text x="800" y="120" fill="#8da0b6" font-size="22" font-weight="800" letter-spacing="8">BEHOLD</text>
+    <text x="800" y="218" fill="url(#type)" stroke="#08101a" stroke-width="10" paint-order="stroke" font-size="108" font-weight="900" letter-spacing="-5">VECTOR GRAPHICS</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <!-- arms -->
+    <path d="M616 608C520 610 454 571 393 513" fill="none" stroke="#e9bd27" stroke-width="62" stroke-linecap="round"/>
+    <path d="M984 608C1080 610 1146 571 1207 513" fill="none" stroke="#e9bd27" stroke-width="62" stroke-linecap="round"/>
+    <!-- left hand -->
+    <g transform="translate(350 466) rotate(-18)">
+      <ellipse cx="0" cy="38" rx="57" ry="47" fill="url(#body)" stroke="#5d4815" stroke-width="6"/>
+      <path d="M-41 13L-71-39M-13 0L-26-63M17 2L26-59M43 15L72-35" fill="none" stroke="#efd136" stroke-width="26" stroke-linecap="round"/>
+    </g>
+    <!-- right hand -->
+    <g transform="translate(1250 466) rotate(18)">
+      <ellipse cx="0" cy="38" rx="57" ry="47" fill="url(#body)" stroke="#5d4815" stroke-width="6"/>
+      <path d="M41 13L71-39M13 0L26-63M-17 2L-26-59M-43 15L-72-35" fill="none" stroke="#efd136" stroke-width="26" stroke-linecap="round"/>
+    </g>
+    <!-- body -->
+    <path d="M625 472Q800 420 975 472L955 805Q800 856 645 805Z" fill="url(#body)" stroke="#574716" stroke-width="7"/>
+    <g fill="#b28b24" opacity=".48">
+      <circle cx="680" cy="525" r="18"/><circle cx="918" cy="546" r="15"/><circle cx="700" cy="716" r="13"/><circle cx="901" cy="751" r="19"/><circle cx="841" cy="497" r="10"/>
+    </g>
+    <!-- eyes -->
+    <ellipse cx="735" cy="570" rx="68" ry="76" fill="#f8fbff" stroke="#303440" stroke-width="6"/>
+    <ellipse cx="865" cy="570" rx="68" ry="76" fill="#f8fbff" stroke="#303440" stroke-width="6"/>
+    <circle cx="758" cy="584" r="28" fill="#42c9ed" stroke="#252d3a" stroke-width="6"/>
+    <circle cx="842" cy="584" r="28" fill="#42c9ed" stroke="#252d3a" stroke-width="6"/>
+    <circle cx="768" cy="590" r="12" fill="#152030"/><circle cx="832" cy="590" r="12" fill="#152030"/>
+    <circle cx="777" cy="579" r="5" fill="#fff"/><circle cx="823" cy="579" r="5" fill="#fff"/>
+    <!-- nose and smile -->
+    <path d="M800 603Q827 626 800 642" fill="none" stroke="#9e7418" stroke-width="9" stroke-linecap="round"/>
+    <path d="M717 671Q800 744 883 671Q864 778 800 779Q736 778 717 671Z" fill="#371c25" stroke="#5b351e" stroke-width="6"/>
+    <path d="M760 730Q800 704 840 730Q827 765 800 766Q773 765 760 730Z" fill="#ff6f91"/>
+    <rect x="766" y="674" width="28" height="39" rx="5" fill="#fffdf0"/>
+    <rect x="806" y="674" width="28" height="39" rx="5" fill="#fffdf0"/>
+    <!-- shirt and tie -->
+    <path d="M646 755Q800 807 954 755L955 805Q800 856 645 805Z" fill="#f4f7f7"/>
+    <path d="M773 788L800 816L827 788L818 842L800 851L782 842Z" fill="#ff5b63" stroke="#6b2824" stroke-width="4"/>
+  </g>
+
+  <g fill="#fff" filter="url(#glow)">
+    <path d="M291 252l9 24 24 9-24 9-9 24-9-24-24-9 24-9z"/>
+    <path d="M1310 262l7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/>
+    <path d="M1260 655l6 15 15 6-15 6-6 15-6-15-15-6 15-6z"/>
+    <path d="M335 666l6 15 15 6-15 6-6 15-6-15-15-6 15-6z"/>
+  </g>
+  <text x="1540" y="858" fill="#667b93" font-family="ui-monospace, Consolas, monospace" font-size="15" text-anchor="end" letter-spacing="3">ACTUAL SVG · NO BITMAPS WERE HARMED</text>
+</svg>
