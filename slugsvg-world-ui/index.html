@@ -472,7 +472,7 @@
       margin-top: 58px;
     }
     .why-card {
-      min-height: 410px;
+      min-height: 0;
       padding: 25px;
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -483,6 +483,7 @@
     .why-card p { margin: 0; color: var(--muted); font-size: 14px; }
     .why-visual {
       height: 142px;
+      min-height: 142px;
       margin: 24px 0 4px;
       padding: 15px;
       border: 1px solid rgba(139, 164, 190, .14);
@@ -493,7 +494,7 @@
       overflow: hidden;
     }
     .visual-label { color: #738396 !important; font-size: 9px !important; letter-spacing: .08em !important; }
-    .aa-compare, .scale-compare, .editable-compare { display: grid; grid-template-columns: repeat(2, 1fr); height: 100%; gap: 12px; }
+    .aa-compare, .scale-compare, .editable-compare { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .aa-sample, .scale-sample, .editable-sample { display: grid; place-items: center; align-content: center; gap: 10px; }
     .aa-circle { width: 63px; height: 63px; background: #62e8ff; }
     .aa-circle.raster {
@@ -507,7 +508,7 @@
     .scale-ring.small { width: 26px; height: 26px; border-width: 2px; }
     .scale-ring.medium { width: 48px; height: 48px; }
     .scale-ring.large { width: 76px; height: 76px; border-width: 4px; }
-    .transform-flow { display: grid; grid-template-columns: 1fr 20px 1fr 20px 1fr; align-items: center; height: 100%; gap: 5px; }
+    .transform-flow { display: grid; grid-template-columns: 1fr 20px 1fr 20px 1fr; align-items: center; gap: 5px; }
     .flow-node { display: grid; place-items: center; align-content: center; gap: 9px; min-width: 0; }
     .flow-arrow { color: #4e6073; font: 700 16px ui-monospace, monospace; text-align: center; }
     .path-mark { width: 52px; height: 38px; border: 3px solid #62e8ff; border-radius: 50% 44% 55% 38%; transform: rotate(-13deg); }
@@ -920,9 +921,13 @@
         <aside class="chapter-id">Chapter 05<br>Authoring & insight</aside>
         <div class="chapter-body">
           <h2>Импорт, редактирование и диагностика.</h2>
-          <p class="intro">Figma Import создаёт редактируемые UMG/Slug assets, дальнейшая сборка выполняется в UMG Designer. Atlas Viewer показывает содержимое atlas и декодированную геометрию во время отладки.</p>
+          <p class="intro">SVG можно импортировать из файла или вставить в asset целым текстовым документом. Figma Import создаёт редактируемые UMG/Slug assets, а Atlas Viewer показывает содержимое atlas и декодированную геометрию во время отладки.</p>
 
           <div class="feature-grid">
+            <article class="card feature wide">
+              <button class="media-button" data-full="media/intake/screenshots/screenshot-015-paste-svg-source.png" aria-label="Открыть Paste SVG в редакторе SlugSvg asset"><img src="media/intake/screenshots/screenshot-015-paste-svg-source.png" alt="Команда Paste SVG вставляет полный SVG-документ из буфера обмена в SlugSvg asset"></button>
+              <div class="card-copy"><span class="tag">Asset authoring</span><h3>Вставка SVG из буфера обмена</h3><p>Кнопка Paste SVG принимает полный SVG-документ как текст, проверяет его и заменяет содержимое asset одной Undo-операцией. Файл на диске для этого не нужен.</p></div>
+            </article>
             <article class="card feature">
               <video controls preload="metadata" poster="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" src="media/intake/video/video-005-figma-import-result-demo.mp4"></video>
               <div class="card-copy"><span class="tag">Import</span><h3>Figma Import</h3><p>Результат импорта — набор редактируемых UMG/Slug assets, а не растрированный снимок экрана.</p></div>
