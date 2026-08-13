@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SlugSvg world UI renderer: direct world rendering, X-ray pilot, composition features, authoring and current boundaries.">
+  <title>SlugSvg — Vector UI beyond the flatland</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #070a0f;
+      --ink-2: #0b1018;
+      --panel: #0f1621;
+      --panel-2: #121b28;
+      --paper: #edf5ff;
+      --body: #b3c1d3;
+      --muted: #78899f;
+      --line: #253247;
+      --line-hot: #4a6483;
+      --cyan: #5ee7ff;
+      --blue: #6aa8ff;
+      --violet: #a77cff;
+      --amber: #ffc768;
+      --red: #ff736c;
+      --green: #74e6ad;
+      --page: 1320px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--ink); }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 80% 4%, rgba(69, 104, 166, .16), transparent 30%),
+        var(--ink);
+      color: var(--paper);
+      font: 16px/1.58 Inter, "Segoe UI", Arial, sans-serif;
+      text-rendering: optimizeLegibility;
+    }
+    body.modal-open { overflow: hidden; }
+    button, input { font: inherit; }
+    a { color: inherit; }
+    img, video { max-width: 100%; }
+    ::selection { background: var(--cyan); color: #071016; }
+
+    .reading-progress {
+      position: fixed;
+      z-index: 100;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(255,255,255,.08);
+    }
+    .reading-progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+    }
+
+    .rail {
+      position: fixed;
+      z-index: 40;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      gap: 7px;
+      padding: 10px 8px;
+      border: 1px solid rgba(104, 129, 161, .22);
+      border-radius: 999px;
+      background: rgba(7, 10, 15, .72);
+      backdrop-filter: blur(16px);
+    }
+    .rail a {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: 1px solid #64758c;
+      text-indent: -9999px;
+      overflow: hidden;
+      transition: .2s ease;
+    }
+    .rail a:hover, .rail a.active {
+      border-color: var(--cyan);
+      background: var(--cyan);
+      box-shadow: 0 0 13px rgba(94, 231, 255, .6);
+    }
+
+    .topline {
+      position: absolute;
+      z-index: 3;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 22px clamp(22px, 4vw, 62px);
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      color: rgba(235, 246, 255, .72);
+      font: 700 11px/1.3 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .topline span:last-child { text-align: right; }
+
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: grid;
+      align-items: end;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .hero-media {
+      position: absolute;
+      z-index: -3;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      filter: saturate(.72) contrast(1.08) brightness(.72);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      z-index: -2;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(5, 8, 13, .94) 0%, rgba(5, 8, 13, .55) 46%, rgba(5, 8, 13, .1) 78%),
+        linear-gradient(180deg, rgba(5, 8, 13, .1) 35%, var(--ink) 100%);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      opacity: .18;
+      background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(90deg, black, transparent 72%);
+    }
+    .hero-copy {
+      width: min(var(--page), 100%);
+      margin: 0 auto;
+      padding: 0 clamp(25px, 7vw, 112px) 9vh;
+    }
+    .eyebrow {
+      color: var(--cyan);
+      font: 800 11px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 1120px;
+      margin: 22px 0 30px;
+      font-size: clamp(60px, 10.5vw, 154px);
+      font-weight: 760;
+      line-height: .79;
+      letter-spacing: -.078em;
+    }
+    h1 span {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(208, 228, 255, .82);
+    }
+    .hero-lede {
+      max-width: 760px;
+      margin: 0;
+      color: #c7d4e4;
+      font-size: clamp(18px, 2vw, 27px);
+      line-height: 1.36;
+    }
+    .hero-facts {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 34px;
+    }
+    .hero-facts span, .pill {
+      padding: 7px 11px;
+      border: 1px solid rgba(136, 166, 203, .38);
+      border-radius: 999px;
+      color: #c4d4e8;
+      background: rgba(7, 10, 15, .36);
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .04em;
+    }
+
+    .thesis {
+      width: min(1040px, calc(100% - 44px));
+      margin: 0 auto;
+      padding: 110px 0 95px;
+    }
+    .thesis p {
+      margin: 0;
+      color: #d6e2f0;
+      font-size: clamp(30px, 5.2vw, 67px);
+      line-height: 1.03;
+      letter-spacing: -.047em;
+    }
+    .thesis em { color: var(--violet); font-style: normal; }
+    .thesis small {
+      display: block;
+      max-width: 740px;
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      letter-spacing: 0;
+    }
+
+    .chapter {
+      width: min(var(--page), 100%);
+      margin: 0 auto;
+      padding: 145px 30px;
+      border-top: 1px solid rgba(53, 72, 98, .5);
+      scroll-margin-top: 20px;
+    }
+    .chapter-grid {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: clamp(35px, 6vw, 90px);
+    }
+    .chapter-id {
+      position: sticky;
+      top: 70px;
+      align-self: start;
+      color: var(--cyan);
+      font: 800 11px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .chapter-id::before {
+      content: "";
+      display: block;
+      width: 38px;
+      height: 1px;
+      margin-bottom: 15px;
+      background: var(--cyan);
+    }
+    .chapter-body h2 {
+      max-width: 970px;
+      margin: 0 0 26px;
+      font-size: clamp(43px, 7vw, 92px);
+      font-weight: 720;
+      line-height: .92;
+      letter-spacing: -.062em;
+    }
+    .chapter-body > .intro {
+      max-width: 780px;
+      margin: 0;
+      color: var(--body);
+      font-size: clamp(18px, 1.7vw, 22px);
+      line-height: 1.55;
+    }
+    .chapter-body > .intro + .intro { margin-top: 18px; }
+    .accent { color: var(--cyan); }
+    .violet { color: var(--violet); }
+
+    .claim {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 20px;
+      max-width: 850px;
+      margin: 46px 0 0;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .claim-label {
+      color: var(--green);
+      font: 800 10px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .claim p { margin: 0; color: #b8c8db; }
+
+    .media-block {
+      margin-top: 62px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #090d14;
+      box-shadow: 0 35px 95px rgba(0,0,0,.35);
+    }
+    .media-block > video, .media-block > img,
+    .media-button img {
+      display: block;
+      width: 100%;
+      max-height: 78vh;
+      object-fit: cover;
+    }
+    .media-meta {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 25px;
+      padding: 14px 17px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font: 11px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .media-meta strong { color: #b8c8dc; font-weight: 700; }
+    .media-meta span:last-child { text-align: right; }
+
+    .media-button {
+      position: relative;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      cursor: zoom-in;
+      background: #090d14;
+      color: inherit;
+    }
+    .media-button::after {
+      content: "↗ enlarge";
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      color: white;
+      background: rgba(5,8,13,.7);
+      font: 700 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: .2s ease;
+    }
+    .media-button:hover::after, .media-button:focus-visible::after { opacity: 1; transform: none; }
+
+    .triptych {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 58px;
+    }
+    .card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--panel);
+    }
+    .card img, .card video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      background: #080c12;
+    }
+    .card-copy { padding: 19px; }
+    .card-copy .number {
+      color: var(--cyan);
+      font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .card-copy h3 {
+      margin: 9px 0 8px;
+      font-size: 22px;
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
+    .card-copy p { margin: 0; color: #8fa0b6; font-size: 14px; }
+
+    .ab-stage {
+      position: relative;
+      margin-top: 60px;
+      overflow: hidden;
+      border: 1px solid var(--line-hot);
+      border-radius: 18px;
+      background: #080b10;
+      --split: 50%;
+    }
+    .ab-stage img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+    .ab-stage .after {
+      position: absolute;
+      inset: 0;
+      clip-path: inset(0 calc(100% - var(--split)) 0 0);
+    }
+    .ab-stage::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--split);
+      width: 1px;
+      background: white;
+      box-shadow: 0 0 20px rgba(255,255,255,.55);
+      pointer-events: none;
+    }
+    .ab-label {
+      position: absolute;
+      z-index: 2;
+      top: 14px;
+      padding: 7px 9px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      color: white;
+      background: rgba(4,6,10,.68);
+      font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .08em;
+    }
+    .ab-label.legacy { right: 14px; }
+    .ab-label.slug { left: 14px; color: var(--cyan); }
+    .ab-control {
+      position: absolute;
+      z-index: 3;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: ew-resize;
+    }
+    .ab-help {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 12px;
+      color: var(--muted);
+      font: 11px ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .video-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 58px;
+    }
+    .video-pair .card video { aspect-ratio: 16 / 9; }
+    .video-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 13px 15px;
+      border-top: 1px solid var(--line);
+      color: #b8c7da;
+      font: 11px ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .video-title span:last-child { color: var(--muted); }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      margin-top: 62px;
+    }
+    .feature { grid-column: span 6; }
+    .feature.wide { grid-column: span 12; }
+    .feature .card-copy { min-height: 132px; }
+    .feature.wide video { aspect-ratio: 2.05 / 1; }
+    .feature .tag {
+      display: inline-block;
+      margin-bottom: 9px;
+      color: var(--amber);
+      font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 58px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .flow-step {
+      position: relative;
+      min-height: 190px;
+      padding: 24px 20px;
+      border-right: 1px solid var(--line);
+    }
+    .flow-step:last-child { border-right: 0; }
+    .flow-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      z-index: 2;
+      right: -10px;
+      top: 22px;
+      color: var(--cyan);
+      background: var(--ink);
+      padding: 0 4px;
+    }
+    .flow-step strong { display: block; margin: 31px 0 7px; font-size: 20px; line-height: 1.1; }
+    .flow-step p { margin: 0; color: var(--muted); font-size: 13px; }
+    .flow-step span { color: var(--cyan); font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+    .boundary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 60px;
+    }
+    .boundary-box {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 27px;
+      background: rgba(16, 23, 34, .55);
+    }
+    .boundary-box h3 { margin: 0 0 22px; font-size: 24px; letter-spacing: -.035em; }
+    .boundary-box ul { list-style: none; margin: 0; padding: 0; }
+    .boundary-box li {
+      position: relative;
+      padding: 14px 0 14px 30px;
+      border-top: 1px solid var(--line);
+      color: #aebed2;
+    }
+    .boundary-box li::before {
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      content: "✓";
+      font-weight: 800;
+    }
+    .boundary-box.deferred li::before { content: "→"; color: var(--amber); }
+    .boundary-box .micro { margin-top: 18px; color: var(--muted); font-size: 12px; }
+
+    .callout {
+      margin-top: 52px;
+      padding: 24px 26px;
+      border-left: 2px solid var(--amber);
+      background: linear-gradient(90deg, rgba(255,199,104,.1), transparent 70%);
+    }
+    .callout strong { color: var(--amber); }
+    .callout p { margin: 5px 0 0; color: #aebed0; }
+
+    .closing {
+      position: relative;
+      min-height: 82vh;
+      display: grid;
+      place-items: center;
+      padding: 90px 30px;
+      overflow: hidden;
+      text-align: center;
+      background: radial-gradient(circle at center, rgba(59, 92, 151, .35), transparent 52%);
+    }
+    .closing::before {
+      content: "";
+      position: absolute;
+      width: min(60vw, 750px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(94,231,255,.18);
+      border-radius: 50%;
+      box-shadow: 0 0 120px rgba(94,231,255,.08), inset 0 0 100px rgba(167,124,255,.05);
+    }
+    .closing > div { position: relative; }
+    .closing h2 {
+      margin: 20px 0 25px;
+      font-size: clamp(54px, 9.5vw, 138px);
+      line-height: .81;
+      letter-spacing: -.075em;
+    }
+    .closing p { max-width: 690px; margin: 0 auto; color: #a8b7ca; font-size: 20px; }
+    .closing .pill { display: inline-block; margin-top: 35px; }
+
+    .modal {
+      width: min(1500px, 96vw);
+      max-width: none;
+      max-height: 94vh;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid #52657d;
+      border-radius: 15px;
+      background: #05070a;
+      color: white;
+    }
+    .modal::backdrop { background: rgba(0,0,0,.88); backdrop-filter: blur(7px); }
+    .modal img { display: block; width: 100%; max-height: 88vh; object-fit: contain; }
+    .modal-close {
+      position: absolute;
+      z-index: 2;
+      right: 12px;
+      top: 12px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: white;
+      background: rgba(5,7,10,.75);
+      cursor: pointer;
+    }
+
+    @media (max-width: 920px) {
+      .rail { display: none; }
+      .chapter { padding: 105px 20px; }
+      .chapter-grid { grid-template-columns: 1fr; }
+      .chapter-id { position: static; }
+      .triptych { grid-template-columns: 1fr; }
+      .video-pair, .boundary { grid-template-columns: 1fr; }
+      .feature { grid-column: span 12; }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .flow-step:nth-child(2) { border-right: 0; }
+      .flow-step:nth-child(2)::after { display: none; }
+      .flow-step:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .hero::before { background: linear-gradient(180deg, rgba(5,8,13,.35), rgba(5,8,13,.95) 77%, var(--ink)); }
+    }
+    @media (max-width: 580px) {
+      .topline span:last-child { display: none; }
+      .hero-copy { padding: 0 22px 8vh; }
+      h1 { font-size: 58px; }
+      .thesis { padding: 90px 0 70px; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-step { border-right: 0; border-bottom: 1px solid var(--line); }
+      .flow-step:last-child { border-bottom: 0; }
+      .flow-step::after { display: none; }
+      .media-meta { grid-template-columns: 1fr; }
+      .media-meta span:last-child { text-align: left; }
+      .ab-stage img { aspect-ratio: auto; min-height: 340px; }
+      .ab-help { flex-direction: column; gap: 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <nav class="rail" aria-label="Разделы документа">
+    <a href="#world" title="World render">World render</a>
+    <a href="#pilot" title="X-ray pilot">X-ray pilot</a>
+    <a href="#composition" title="Composition">Composition</a>
+    <a href="#depth" title="Lens and depth">Lens and depth</a>
+    <a href="#authoring" title="Authoring and debugging">Authoring</a>
+    <a href="#boundaries" title="Boundaries">Boundaries</a>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="topline"><span>SlugSvg / internal case study</span><span>BorderLine · 2026-08-13</span></div>
+    <video class="hero-media" autoplay muted loop playsinline preload="metadata" poster="media/intake/screenshots/screenshot-003-decal-demo.png" src="media/intake/video/video-001-slug-widget-decal-render.mp4"></video>
+    <div class="hero-copy">
+      <div class="eyebrow">World UI renderer pilot</div>
+      <h1>Vector UI<span>beyond the flatland.</span></h1>
+      <p class="hero-lede">SlugSvg вырос из SVG-виджета в единый pipeline для UMG-композиции и прямого рендера в world — без обязательного промежуточного render target для UI-слоя.</p>
+      <div class="hero-facts"><span>UMG</span><span>WORLD WIDGET</span><span>DECAL</span><span>X-RAY PILOT</span></div>
+    </div>
+  </header>
+
+  <section class="thesis" aria-label="Главный тезис">
+    <p>Задача была не в том, чтобы показать SVG в мире. Задача — сохранить <em>обычный UI authoring</em>, но убрать текстурную прослойку там, где весь слой уже принадлежит Slug renderer.</p>
+    <small>Этот документ — не полный API reference. Это последовательность визуальных доказательств: от draw surface до production-shaped пилота, композиционных возможностей и текущих границ решения.</small>
+  </section>
+
+  <main>
+    <section class="chapter" id="world" data-nav="world">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 01<br>Draw surfaces</aside>
+        <div class="chapter-body">
+          <h2>World становится ещё одним canvas.</h2>
+          <p class="intro">Backend умеет рисовать Slug-only widget напрямую в world и использовать тот же векторный контент как decal. Для UI-слоя не нужен промежуточный render target: элементы проходят через наш renderer сразу в целевую поверхность.</p>
+          <div class="claim"><div class="claim-label">Что доказано</div><p>Один SlugSvg content path показан в трёх контекстах: обычный widget, world placement и decal projection.</p></div>
+
+          <div class="triptych">
+            <article class="card">
+              <button class="media-button" data-full="media/intake/screenshots/screenshot-001-slug-widget.png" aria-label="Открыть Slug widget"><img src="media/intake/screenshots/screenshot-001-slug-widget.png" alt="SlugSvg widget demo"></button>
+              <div class="card-copy"><span class="number">01 / WIDGET</span><h3>Slug widget</h3><p>Исходная композиция остаётся обычным UMG-виджетом.</p></div>
+            </article>
+            <article class="card">
+              <button class="media-button" data-full="media/intake/screenshots/screenshot-002-door-selected-in-editor.png" aria-label="Открыть world widget в редакторе"><img src="media/intake/screenshots/screenshot-002-door-selected-in-editor.png" alt="World widget selected in Unreal Editor"></button>
+              <div class="card-copy"><span class="number">02 / WORLD</span><h3>Placed in world</h3><p>Entity и её геометрия видны и настраиваются в редакторе.</p></div>
+            </article>
+            <article class="card">
+              <button class="media-button" data-full="media/intake/screenshots/screenshot-003-decal-demo.png" aria-label="Открыть decal demo"><img src="media/intake/screenshots/screenshot-003-decal-demo.png" alt="SlugSvg decal demo"></button>
+              <div class="card-copy"><span class="number">03 / DECAL</span><h3>Projected as decal</h3><p>Тот же визуальный язык переносится на поверхность сцены.</p></div>
+            </article>
+          </div>
+
+          <figure class="media-block">
+            <video controls preload="metadata" poster="media/intake/screenshots/screenshot-003-decal-demo.png" src="media/intake/video/video-001-slug-widget-decal-render.mp4"></video>
+            <figcaption class="media-meta"><span><strong>World render proof</strong> · widget + selected entity + decal</span><span>29.4 sec · captured in editor</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="pilot" data-nav="pilot">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 02<br>X-ray pilot</aside>
+        <div class="chapter-body">
+          <h2>Пилот там, где различия нельзя спрятать.</h2>
+          <p class="intro">X-ray scanner — не чистый tech sample. Это полупрозрачный игровой экран, который игрок держит в руках: композиция должна совпасть с legacy, остаться читаемой в движении и сохранить внешний runtime-контракт tool.</p>
+          <p class="intro">Legacy-реализация остаётся рядом и может быть возвращена через data asset. Поэтому visual parity сравнивается в одном проекте, а не по памяти или по отдельному макету.</p>
+          <div class="claim"><div class="claim-label">Критерий</div><p>Финальный авторитет — уже собранный legacy scanner в редакторе. Figma использовалась как источник и ориентир, но не как повод передизайнить экран.</p></div>
+
+          <div class="ab-stage" aria-label="Сравнение Slug и legacy X-ray scanner">
+            <img src="media/intake/screenshots/screenshot-004-legacy-xray-scanner.png" alt="Legacy X-ray scanner">
+            <img class="after" src="media/intake/screenshots/screenshot-005-slug-xray-scanner.png" alt="Slug X-ray scanner">
+            <span class="ab-label slug">SLUG</span><span class="ab-label legacy">LEGACY</span>
+            <input class="ab-control" type="range" min="0" max="100" value="50" aria-label="Положение разделителя Slug и legacy">
+          </div>
+          <div class="ab-help"><span>← Slug implementation</span><span>Передвиньте разделитель</span><span>Legacy reference →</span></div>
+
+          <div class="video-pair">
+            <article class="card">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-004-legacy-xray-scanner.png" src="media/intake/video/video-002-legacy-xray-post-motion-blur.mp4"></video>
+              <div class="video-title"><span>Legacy scanner</span><span>post motion blur path</span></div>
+            </article>
+            <article class="card">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-005-slug-xray-scanner.png" src="media/intake/video/video-003-slug-xray-scanner.mp4"></video>
+              <div class="video-title"><span>Slug scanner</span><span>direct vector UI</span></div>
+            </article>
+          </div>
+
+          <div class="callout"><strong>Важная граница.</strong><p>Утверждение «без render target» относится к Slug UI-слою. Detector, scene feed или другой внешний визуальный источник остаются отдельной системой и могут приходить как texture/material. Пилот не требует переписывать их в вектор.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="composition" data-nav="composition">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 03<br>From SVG to UI</aside>
+        <div class="chapter-body">
+          <h2>Не SVG-картинка. <span class="violet">Композиционный pipeline.</span></h2>
+          <p class="intro">Реальный экран требует больше, чем пути и заливки. Внутри UMG Slug-контент уже сочетается с rigged animation, texture/material brushes, Slug Text и Rich Text. Эти возможности используют один renderer и остаются отдельными редактируемыми виджетами.</p>
+
+          <div class="feature-grid">
+            <article class="card feature">
+              <video controls preload="metadata" src="media/intake/video/video-004-rigged-arrow-umg-animation-demo.mp4"></video>
+              <div class="card-copy"><span class="tag">Animation</span><h3>Rigged SVG in UMG</h3><p>Authored rig motion воспроизводится внутри обычной widget-композиции, без смены surface.</p></div>
+            </article>
+            <article class="card feature">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-011-svg-animated-material-fill.png" src="media/intake/video/video-006-svg-animated-material-fill.mp4"></video>
+              <div class="card-copy"><span class="tag">Paint</span><h3>Texture and material fills</h3><p>SVG coverage может заполняться texture brush или анимированным UI material.</p></div>
+            </article>
+            <article class="card feature wide">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-012-slug-rich-text.png" src="media/intake/video/video-011-text-demo-additional.mp4"></video>
+              <div class="card-copy"><span class="tag">Typography</span><h3>Slug Text and Rich Text</h3><p>Кириллица, shaping, wrapping, разные стили и inline runs. Текст — часть Slug pipeline, а не заранее растрированная подпись.</p></div>
+            </article>
+          </div>
+
+          <div class="flow" aria-label="Слои композиции">
+            <div class="flow-step"><span>01</span><strong>Layout</strong><p>UMG задаёт структуру, размеры и отношения между элементами.</p></div>
+            <div class="flow-step"><span>02</span><strong>Vector content</strong><p>SVG и текст сохраняют аналитическое покрытие.</p></div>
+            <div class="flow-step"><span>03</span><strong>Paint</strong><p>Solid, gradient, texture или UI material.</p></div>
+            <div class="flow-step"><span>04</span><strong>Composition</strong><p>Общие Lens и Camera domains применяются к потомкам.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="depth" data-nav="depth">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 04<br>Shared transforms</aside>
+        <div class="chapter-body">
+          <h2>Эффект принадлежит <span class="accent">стеку</span>, не картинке.</h2>
+          <p class="intro">Lens работает как container: одна screen-space деформация применяется ко всему Slug-содержимому внутри — SVG, Slug Text, Rich Text и brush/material carriers. Это позволяет собирать экран как группу, а не повторять параметры на каждом leaf widget.</p>
+
+          <div class="video-pair">
+            <article class="card">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-013-shared-screen-space-lens.png" src="media/intake/video/video-007-shared-screen-space-lens.mp4"></video>
+              <div class="video-title"><span>Shared screen-space Lens</span><span>SVG descendants</span></div>
+            </article>
+            <article class="card">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-014-lens-with-text.png" src="media/intake/video/video-008-lens-with-text.mp4"></video>
+              <div class="video-title"><span>Lens with text</span><span>mixed composition</span></div>
+            </article>
+          </div>
+
+          <p class="intro" style="margin-top:82px">Для глубины разделены две ответственности: <strong>CameraGroup</strong> задаёт общую перспективу всему стеку, а <strong>Transform3D</strong> задаёт model rotation и Z отдельному потомку. Layout остаётся двумерным, а результат виден непосредственно в UMG Designer.</p>
+          <figure class="media-block">
+            <video controls preload="metadata" src="media/intake/video/video-010-3d-transform.mp4"></video>
+            <figcaption class="media-meta"><span><strong>CameraGroup + Transform3D</strong> · shared camera, independent model transforms</span><span>Designer preview · 7.2 sec</span></figcaption>
+          </figure>
+          <div class="callout"><strong>Текущая область поддержки.</strong><p>CameraGroup и Transform3D доказаны для UMG/Slate preview. Direct-world capture пока явно отвергает эти scopes: расширение world instance ABI оставлено отдельной задачей.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="authoring" data-nav="authoring">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 05<br>Authoring & insight</aside>
+        <div class="chapter-body">
+          <h2>Backend полезен, только если им можно пользоваться.</h2>
+          <p class="intro">Renderer встроен в нормальный production loop: Figma Import помогает получить исходную структуру, UMG остаётся местом композиции и настройки, а Atlas Viewer делает GPU-ресурсы наблюдаемыми.</p>
+
+          <div class="feature-grid">
+            <article class="card feature">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" src="media/intake/video/video-005-figma-import-result-demo.mp4"></video>
+              <div class="card-copy"><span class="tag">Import</span><h3>Figma to editable assets</h3><p>Дизайн используется как источник, но результат остаётся набором UMG/Slug assets, а не закрытым raster export.</p></div>
+            </article>
+            <article class="card feature">
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-009-debug-atlas-viewer.png" src="media/intake/video/video-009-debug-atlas-viewer.mp4"></video>
+              <div class="card-copy"><span class="tag">Debug</span><h3>Live atlas viewer</h3><p>Загрузка atlas и декодированная геометрия доступны для диагностики прямо в редакторе.</p></div>
+            </article>
+          </div>
+
+          <div class="triptych">
+            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-006-figma-import-character-summary.png" aria-label="Открыть Figma import character summary"><img src="media/intake/screenshots/screenshot-006-figma-import-character-summary.png" alt="Figma import character summary"></button><div class="card-copy"><span class="number">FIGMA 01</span><h3>Product screen</h3><p>Сложная композиция импортируется как редактируемая структура.</p></div></article>
+            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-007-figma-import-message-list.png" aria-label="Открыть Figma import message list"><img src="media/intake/screenshots/screenshot-007-figma-import-message-list.png" alt="Figma import message list in UMG"></button><div class="card-copy"><span class="number">FIGMA 02</span><h3>Reusable widget</h3><p>Результат виден в обычном UMG Designer.</p></div></article>
+            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" aria-label="Открыть Figma import X-ray UI"><img src="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" alt="Figma imported X-ray UI"></button><div class="card-copy"><span class="number">FIGMA 03</span><h3>Pilot source</h3><p>X-ray design помогает восстанавливать элементы, но не переопределяет legacy parity.</p></div></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="boundaries" data-nav="boundaries">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 06<br>Claim boundary</aside>
+        <div class="chapter-body">
+          <h2>Что мы утверждаем. И чего <span class="violet">пока нет.</span></h2>
+          <p class="intro">Пилот полезен только с честной границей. Ниже — текущий proof, а не обещание универсального UI runtime.</p>
+
+          <div class="boundary">
+            <section class="boundary-box">
+              <h3>Доказано текущими demos</h3>
+              <ul>
+                <li>Slug-only widget render в world без промежуточного UI RT</li>
+                <li>SVG render как decal</li>
+                <li>X-ray pilot с переключаемой legacy-реализацией</li>
+                <li>Texture и animated material fills</li>
+                <li>Rigged SVG animation в UMG</li>
+                <li>Slug Text и Rich Text composition</li>
+                <li>Shared Lens для mixed Slug content</li>
+                <li>CameraGroup + Transform3D в UMG Designer</li>
+                <li>Figma Import и debug Atlas Viewer</li>
+              </ul>
+              <p class="micro">Формулировки ограничены показанными editor/PIE captures.</p>
+            </section>
+            <section class="boundary-box deferred">
+              <h3>Отдельный scope / backlog</h3>
+              <ul>
+                <li>Interaction и hit-test parity для world UI</li>
+                <li>Direct-world ABI для CameraGroup / Transform3D</li>
+                <li>Автоматизированный pixel-golden для Designer projection</li>
+                <li>Перенос внешнего detector/scene content в Slug renderer</li>
+                <li>Финальная perf-оценка на целевых production scenes</li>
+              </ul>
+              <p class="micro">Эти пункты не нужны, чтобы признать текущий render proof, но нужны перед расширением области применения.</p>
+            </section>
+          </div>
+
+          <div class="claim"><div class="claim-label">Следующий шаг</div><p>Зафиксировать visual acceptance для X-ray A/B, затем использовать этот же backend в следующем world UI без копирования legacy WidgetComponent-схемы.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="closing">
+    <div>
+      <div class="eyebrow">SlugSvg / renderer direction</div>
+      <h2>One pipeline.<br>More surfaces.</h2>
+      <p>World render перестаёт быть отдельным трюком с текстурой. Он становится ещё одной точкой назначения для того же Slug-authored UI.</p>
+      <a class="pill" href="#top">BACK TO TOP ↑</a>
+    </div>
+  </footer>
+
+  <dialog class="modal" aria-label="Полноэкранное изображение">
+    <button class="modal-close" type="button" aria-label="Закрыть">Close ✕</button>
+    <img alt="">
+  </dialog>
+
+  <script>
+    const progress = document.querySelector('.reading-progress span');
+    const updateProgress = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      progress.style.width = `${max > 0 ? Math.min(100, scrollY / max * 100) : 0}%`;
+    };
+    addEventListener('scroll', updateProgress, { passive: true });
+    addEventListener('resize', updateProgress);
+    updateProgress();
+
+    const railLinks = [...document.querySelectorAll('.rail a')];
+    const sectionObserver = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      railLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`));
+    }, { rootMargin: '-28% 0px -58% 0px', threshold: [0, .2, .5] });
+    document.querySelectorAll('.chapter').forEach(section => sectionObserver.observe(section));
+
+    const compare = document.querySelector('.ab-stage');
+    const compareInput = compare.querySelector('input');
+    compareInput.addEventListener('input', () => compare.style.setProperty('--split', `${compareInput.value}%`));
+
+    const modal = document.querySelector('.modal');
+    const modalImage = modal.querySelector('img');
+    const closeModal = () => modal.close();
+    document.querySelectorAll('[data-full]').forEach(button => button.addEventListener('click', () => {
+      modalImage.src = button.dataset.full;
+      modalImage.alt = button.querySelector('img').alt;
+      modal.showModal();
+      document.body.classList.add('modal-open');
+    }));
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    modal.addEventListener('close', () => {
+      document.body.classList.remove('modal-open');
+      modalImage.removeAttribute('src');
+    });
+
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) document.querySelector('.hero-media').pause();
+  </script>
+</body>
+</html>
