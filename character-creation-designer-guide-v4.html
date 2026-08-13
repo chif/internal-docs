@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Визуальная карта настройки персонажа.">
+<title>Character Setup — Asset Map</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #07090c;
+    --panel: #0d1116;
+    --panel-2: #121820;
+    --line: #28323d;
+    --line-soft: #1b232c;
+    --text: #edf4f8;
+    --muted: #9caab7;
+    --dim: #667482;
+    --cyan: #57d8ff;
+    --cyan-soft: rgba(87, 216, 255, .10);
+    --amber: #ffc76a;
+    --amber-soft: rgba(255, 199, 106, .09);
+    --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    color: var(--text);
+    background:
+      linear-gradient(rgba(255,255,255,.014) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.014) 1px, transparent 1px),
+      var(--bg);
+    background-size: 28px 28px;
+    font: 14px/1.45 var(--sans);
+  }
+  button { font: inherit; }
+  button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  .shell { min-height: 100vh; display: grid; grid-template-columns: 235px minmax(0, 1fr); }
+  .rail {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 17px 13px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    background: rgba(9, 12, 16, .97);
+  }
+  .brand { padding: 4px 7px 15px; border-bottom: 1px solid var(--line-soft); }
+  .brand strong { display: block; font: 700 12px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .brand span { display: block; margin-top: 5px; color: var(--dim); font: 10px/1.3 var(--mono); }
+  .nav-label { margin: 16px 7px 7px; color: var(--dim); font: 700 9px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  .asset-nav { display: grid; gap: 4px; }
+  .asset-button {
+    width: 100%;
+    padding: 10px 11px;
+    display: grid;
+    gap: 3px;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+  .asset-button small { color: var(--dim); font: 700 9px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .asset-button b { font: 600 11px/1.35 var(--mono); overflow-wrap: anywhere; }
+  .asset-button:hover { color: var(--text); background: var(--panel); }
+  .asset-button[aria-selected="true"] { color: var(--text); border-color: rgba(87,216,255,.45); background: var(--cyan-soft); }
+  .asset-button[aria-selected="true"] small { color: var(--cyan); }
+  .rail-foot { margin-top: auto; padding: 13px 7px 3px; color: var(--dim); border-top: 1px solid var(--line-soft); font: 9px/1.55 var(--mono); }
+
+  main { min-width: 0; }
+  .workspace { max-width: 1500px; margin: 0 auto; padding: 24px 28px 46px; }
+  .topbar { margin-bottom: 14px; }
+  .eyebrow { margin-bottom: 7px; color: var(--cyan); font: 700 9px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  .topbar h1 { margin: 0; font: 650 clamp(24px, 3vw, 38px)/1.05 var(--sans); letter-spacing: -.035em; overflow-wrap: anywhere; }
+  .asset-search { margin: 9px 0 0; color: var(--muted); font: 11px/1.4 var(--mono); }
+  .asset-search code { color: var(--text); }
+  .result {
+    margin: 14px 0;
+    padding: 11px 13px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: baseline;
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .result b { color: var(--cyan); font: 700 9px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  .result span { color: var(--muted); font-size: 12px; }
+  .privacy-note { margin: -5px 0 14px; color: var(--amber); font: 700 9px/1.45 var(--mono); letter-spacing: .04em; }
+
+  .shot-tabs { display: flex; gap: 4px; margin: 0 0 7px; overflow-x: auto; }
+  .shot-tab {
+    padding: 7px 10px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font: 700 9px/1 var(--mono);
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .shot-tab[aria-selected="true"] { color: var(--cyan); border-color: rgba(87,216,255,.45); background: var(--cyan-soft); }
+
+  .visual { min-width: 0; border: 1px solid var(--line); background: #05070a; }
+  .shot-button { width: 100%; padding: 0; display: block; position: relative; border: 0; background: #05070a; cursor: zoom-in; }
+  .shot-button::after { content: "ОТКРЫТЬ"; position: absolute; right: 10px; top: 10px; padding: 5px 7px; color: var(--muted); border: 1px solid var(--line); background: rgba(5,7,10,.9); font: 700 9px/1 var(--mono); }
+  .shot-stage { display: block; position: relative; }
+  .shot-stage img { width: 100%; height: auto; display: block; }
+  .notes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+  .note {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    max-width: 255px;
+    padding: 6px 8px 6px 27px;
+    color: #f4fbff;
+    border: 1px solid rgba(87,216,255,.88);
+    border-radius: 3px;
+    background: rgba(4,11,16,.94);
+    box-shadow: 0 4px 15px rgba(0,0,0,.4);
+    font: 700 9px/1.3 var(--mono);
+    text-align: left;
+  }
+  .note::before { content: attr(data-n); position: absolute; left: 6px; top: 50%; width: 15px; height: 15px; display: grid; place-items: center; color: #061116; border-radius: 50%; background: var(--cyan); transform: translateY(-50%); font: 900 8px/1 var(--mono); }
+
+  .caption {
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .caption b { color: var(--cyan); font: 700 9px/1.4 var(--mono); text-transform: uppercase; }
+  .caption span { color: var(--muted); font-size: 12px; }
+  .fact {
+    margin-top: 10px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    border: 1px solid rgba(255,199,106,.35);
+    background: var(--amber-soft);
+  }
+  .fact b { color: var(--amber); font: 700 9px/1.4 var(--mono); text-transform: uppercase; }
+  .fact span { color: var(--muted); font-size: 12px; }
+
+  dialog { width: min(97vw, 1800px); max-width: none; padding: 0; color: var(--text); border: 1px solid var(--line); background: #05070a; }
+  dialog::backdrop { background: rgba(0,0,0,.86); }
+  .viewer-bar { padding: 8px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .viewer-close { padding: 7px 10px; color: var(--text); border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; }
+  .viewer-canvas { position: relative; }
+  #viewer-image { width: 100%; height: auto; display: block; }
+  .viewer-notes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+  .viewer-notes .note { font-size: clamp(9px, .72vw, 14px); max-width: 320px; }
+
+  @media (max-width: 760px) {
+    .shell { display: block; }
+    .rail { position: static; height: auto; padding: 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+    .brand { padding: 3px 5px 10px; }
+    .nav-label, .rail-foot { display: none; }
+    .asset-nav { margin-top: 8px; display: flex; overflow-x: auto; }
+    .asset-button { min-width: 145px; }
+    .workspace { padding: 18px 11px 34px; }
+    .result, .caption, .fact { grid-template-columns: 1fr; gap: 4px; }
+    .note { max-width: 155px; padding: 4px 5px 4px 22px; font-size: 7px; }
+    .note::before { left: 4px; width: 13px; height: 13px; font-size: 7px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <div class="brand"><strong>Character Setup</strong><span>Redacted Asset Map / v4</span></div>
+    <div class="nav-label">Что настраиваем</div>
+    <nav class="asset-nav" aria-label="Ассеты настройки персонажа">
+      <button class="asset-button" type="button" data-asset="scene" aria-selected="true"><small>Сцена шага</small><b>DA_ChargenSceneStates</b></button>
+      <button class="asset-button" type="button" data-asset="camera" aria-selected="false"><small>Кадр и свет</small><b>DA_FullScaleCameraSocket</b></button>
+      <button class="asset-button" type="button" data-asset="appearance" aria-selected="false"><small>Список настроек</small><b>DA_ChargenAppearanceOptions</b></button>
+      <button class="asset-button" type="button" data-asset="facetune" aria-selected="false"><small>Face Tune</small><b>DA_ChargenFaceTuneOptions</b></button>
+      <button class="asset-button" type="button" data-asset="origin" aria-selected="false"><small>Стартовая внешность</small><b>DA_OriginPreset_Earth</b></button>
+    </nav>
+    <div class="rail-foot">Названия демонстрируемых ассетов показаны.<br>Чувствительные значения размыты.<br>Клик по скриншоту — полный размер.</div>
+  </aside>
+
+  <main>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="eyebrow" id="asset-role">Сцена шага</div>
+        <h1 id="asset-name">DA_ChargenSceneStates</h1>
+        <p class="asset-search">Имя ассета указано без пути в Content Browser.</p>
+      </header>
+
+      <div class="privacy-note">REDACTED VERSION — чувствительные данные размыты непосредственно в PNG</div>
+
+      <div class="result"><b>Результат</b><span id="asset-result">Какой preview показывается на выбранном шаге.</span></div>
+
+      <div class="shot-tabs" id="shot-tabs" role="tablist" aria-label="Скриншоты ассета"></div>
+      <section class="visual" aria-label="Поля выбранного ассета">
+        <button class="shot-button" id="shot-button" type="button" aria-label="Открыть скриншот в полном размере">
+          <span class="shot-stage">
+            <img id="asset-image" src="assets/character-creation-redacted/scene-state-appearance.png" alt="Раскрытое состояние Appearance">
+            <span class="notes" id="asset-notes"></span>
+          </span>
+        </button>
+        <div class="caption"><b id="shot-label">Состояние</b><span id="shot-caption"></span></div>
+      </section>
+
+      <div class="fact" id="asset-fact"><b>Важно</b><span id="asset-fact-text"></span></div>
+    </div>
+  </main>
+</div>
+
+<dialog id="viewer" aria-label="Скриншот ассета в полном размере">
+  <div class="viewer-bar"><button class="viewer-close" type="button">Закрыть</button></div>
+  <div class="viewer-canvas"><img id="viewer-image" alt=""><div class="viewer-notes"></div></div>
+</dialog>
+
+<script>
+  const assets = {
+    scene: {
+      role: 'Сцена шага',
+      name: 'DA_ChargenSceneStates',
+      result: 'Какой preview показывается на выбранном шаге: видимость, расстановка, камера и персонажи.',
+      fact: 'Formation и Camera — две отдельные ссылки одного Scene State.',
+      shots: [
+        {
+          label: 'Состояние',
+          caption: 'Одна раскрытая запись массива States. Step Id выбирает экран; остальные поля описывают его preview.',
+          image: 'assets/character-creation-redacted/scene-state-appearance.png',
+          alt: 'Раскрытое состояние Appearance',
+          notes: [
+            [69,31,'1','Step Id — экран'],
+            [69,37,'2','Sub Step Id — уточнение экрана'],
+            [69,43,'3','Scene Visible — показать preview'],
+            [69,49,'4','Formation — позиции персонажей'],
+            [69,55,'5','Camera — кадр и ссылка на свет'],
+            [69,61,'6','Occupants — содержимое слотов']
+          ]
+        },
+        {
+          label: 'Персонаж в слоте',
+          caption: 'Одна запись Occupants: ключ карты указывает слот Formation, значение — кого и как показать.',
+          image: 'assets/character-creation-redacted/scene-state-occupant.png',
+          alt: 'Раскрытый Occupant',
+          notes: [
+            [69,55,'1','Ключ — слот Formation'],
+            [69,62,'2','Doll — выбранный персонаж'],
+            [69,69,'3','Outfit — источник одежды'],
+            [69,76,'4','Pose — постоянная поза'],
+            [69,83,'5','Movement montage — действие preview']
+          ]
+        },
+        {
+          label: 'Массив States',
+          caption: 'Свернутый States показывает только количество записей. Для настройки раскройте массив и нужный элемент.',
+          image: 'assets/character-creation-redacted/scene-states.png',
+          alt: 'Свернутый массив States',
+          notes: [[60,20,'1','States — раскройте массив'],[60,25,'2','Количество состояний']]
+        }
+      ]
+    },
+    camera: {
+      role: 'Кадр и свет',
+      name: 'DA_FullScaleCameraSocket',
+      result: 'Готовый кадр: FOV, положение камеры, привязка к персонажу и Light Preset.',
+      fact: 'Formation не хранится в Camera Config: Formation и Camera назначаются отдельно.',
+      shots: [
+        {
+          label: 'Все поля',
+          caption: 'Пример Camera Config. Light Preset — ссылка на отдельный ассет освещения.',
+          image: 'assets/character-creation-redacted/camera-config-expanded.png',
+          alt: 'Раскрытый Camera Config',
+          notes: [
+            [69,18,'1','Camera FOV — угол обзора'],
+            [69,26,'2','Camera Transform — положение'],
+            [69,35,'3','Skeletal Mesh — привязка к персонажу'],
+            [69,42,'4','Target Slot Tag — нужный слот'],
+            [69,49,'5','Socket + Offset — точка кадрирования'],
+            [69,57,'6','Light Preset — освещение']
+          ]
+        },
+        {
+          label: 'Пример значения',
+          caption: 'Тот же ассет крупнее: показаны привязка к слоту и отдельный Light Preset.',
+          image: 'assets/character-creation-redacted/camera-config.png',
+          alt: 'Значения Camera Config',
+          notes: [[58,11,'1','FOV'],[58,19,'2','Target Slot'],[58,25,'3','Socket Name'],[58,31,'4','Light Preset']]
+        }
+      ]
+    },
+    appearance: {
+      role: 'Список настроек внешности',
+      name: 'DA_ChargenAppearanceOptions',
+      result: 'Порядок вкладок Appearance, секции внутри вкладки и строки параметров.',
+      fact: 'Generated Rows добавляются после вручную заданных Groups. Preview Camera — отдельная ссылка категории, а не часть Groups.',
+      shots: [
+        {
+          label: 'Категория',
+          caption: 'Один элемент Categories. Положение элемента в массиве задает порядок вкладки.',
+          image: 'assets/character-creation-redacted/appearance-categories.png',
+          alt: 'Категория Appearance',
+          notes: [
+            [68,25,'1','Index — порядок вкладки'],
+            [68,31,'2','Display Name — подпись вкладки'],
+            [68,37,'3','Preview Camera — камера этой вкладки'],
+            [68,43,'4','Groups — секции и строки'],
+            [68,50,'5','Generated Rows — автоматические строки']
+          ]
+        },
+        {
+          label: 'Группа и строки',
+          caption: 'Раскрытая группа. Options содержит строки разных типов; стрелка справа раскрывает параметры конкретной строки.',
+          image: 'assets/character-creation-redacted/appearance-options.png',
+          alt: 'Группа и Options',
+          notes: [
+            [67,35,'1','Groups — массив секций'],
+            [67,41,'2','Display Name — заголовок секции'],
+            [67,48,'3','Options — строки секции'],
+            [67,55,'4','Класс строки — изменяемый параметр'],
+            [89,55,'5','Стрелка — настройки строки']
+          ]
+        }
+      ]
+    },
+    facetune: {
+      role: 'Face Tune',
+      name: 'DA_ChargenFaceTuneOptions',
+      result: 'Отдельная категория Face Tune с собственной камерой и автоматически построенными коррекциями головы.',
+      fact: 'Groups и Generated Rows существуют одновременно: ручные и автоматически сформированные строки.',
+      shots: [
+        {
+          label: 'Категория Face Tune',
+          caption: 'Generated Rows задаёт источник автоматически сформированных строк.',
+          image: 'assets/character-creation-redacted/face-tune-options.png',
+          alt: 'Настройки Face Tune',
+          notes: [
+            [67,28,'1','Display Name — подпись категории'],
+            [67,35,'2','Preview Camera — кадр лица'],
+            [67,42,'3','Groups — дополнительные ручные строки'],
+            [67,49,'4','Generated Rows — источник автосписка'],
+            [67,56,'5','Generated Group Name — заголовок блока']
+          ]
+        }
+      ]
+    },
+    origin: {
+      role: 'Стартовая внешность',
+      name: 'DA_OriginPreset_Earth',
+      result: 'Ссылки на полные presets стартовой внешности для выбранных Origin и Sex.',
+      fact: 'Sex определяется данными внутри связанного preset, а не позицией элемента в массиве.',
+      shots: [
+        {
+          label: 'Appearance Presets',
+          caption: 'В Origin Preset хранится список ссылок. Порядок элементов не определяет Sex.',
+          image: 'assets/character-creation-redacted/origin-presets-expanded.png',
+          alt: 'Раскрытые Appearance Presets',
+          notes: [
+            [68,74,'1','Appearance Presets — список ссылок'],
+            [68,82,'2','Preset — первый вариант'],
+            [68,90,'3','Preset — второй вариант'],
+            [89,82,'4','Открыть ссылку и проверить Sex']
+          ]
+        },
+        {
+          label: 'Где находится блок',
+          caption: 'Блок Appearance находится внизу Origin Preset. Остальные секции отвечают за другие стартовые данные.',
+          image: 'assets/character-creation-redacted/origin-appearance-presets.png',
+          alt: 'Origin Preset и свернутый Appearance',
+          notes: [[6,84,'1','Appearance — раскрыть'],[41,51,'2','UI — карточка Origin'],[41,34,'3','Equipment — стартовая экипировка']]
+        }
+      ]
+    }
+  };
+
+  const assetRole = document.querySelector('#asset-role');
+  const assetName = document.querySelector('#asset-name');
+  const assetResult = document.querySelector('#asset-result');
+  const assetImage = document.querySelector('#asset-image');
+  const assetNotes = document.querySelector('#asset-notes');
+  const shotLabel = document.querySelector('#shot-label');
+  const shotCaption = document.querySelector('#shot-caption');
+  const assetFactText = document.querySelector('#asset-fact-text');
+  const shotTabs = document.querySelector('#shot-tabs');
+  const shotButton = document.querySelector('#shot-button');
+  const viewer = document.querySelector('#viewer');
+  const viewerImage = document.querySelector('#viewer-image');
+  const viewerNotes = document.querySelector('.viewer-notes');
+  let currentAsset = 'scene';
+  let currentShot = 0;
+
+  function makeNote([x, y, number, label]) {
+    const note = document.createElement('span');
+    note.className = 'note';
+    note.dataset.n = number;
+    note.textContent = label;
+    note.style.setProperty('--x', `${x}%`);
+    note.style.setProperty('--y', `${y}%`);
+    return note;
+  }
+
+  function renderShot(index) {
+    const shot = assets[currentAsset].shots[index];
+    currentShot = index;
+    assetImage.src = shot.image;
+    assetImage.alt = shot.alt;
+    assetNotes.replaceChildren(...shot.notes.map(makeNote));
+    shotLabel.textContent = shot.label;
+    shotCaption.textContent = shot.caption;
+    [...shotTabs.children].forEach((tab, tabIndex) => tab.setAttribute('aria-selected', String(tabIndex === index)));
+  }
+
+  function renderAsset(key) {
+    const asset = assets[key];
+    currentAsset = key;
+    document.querySelectorAll('.asset-button').forEach(button => button.setAttribute('aria-selected', String(button.dataset.asset === key)));
+    assetRole.textContent = asset.role;
+    assetName.textContent = asset.name;
+    assetResult.textContent = asset.result;
+    assetFactText.textContent = asset.fact;
+    shotTabs.replaceChildren(...asset.shots.map((shot, index) => {
+      const tab = document.createElement('button');
+      tab.className = 'shot-tab';
+      tab.type = 'button';
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', String(index === 0));
+      tab.textContent = shot.label;
+      tab.addEventListener('click', () => renderShot(index));
+      return tab;
+    }));
+    renderShot(0);
+    history.replaceState(null, '', `#${key}`);
+  }
+
+  document.querySelectorAll('.asset-button').forEach(button => button.addEventListener('click', () => renderAsset(button.dataset.asset)));
+  shotButton.addEventListener('click', () => {
+    const shot = assets[currentAsset].shots[currentShot];
+    viewerImage.src = shot.image;
+    viewerImage.alt = shot.alt;
+    viewerNotes.replaceChildren(...shot.notes.map(makeNote));
+    viewer.showModal();
+  });
+  document.querySelector('.viewer-close').addEventListener('click', () => viewer.close());
+  viewer.addEventListener('click', event => { if (event.target === viewer) viewer.close(); });
+
+  const initialAsset = location.hash.slice(1);
+  renderAsset(Object.hasOwn(assets, initialAsset) ? initialAsset : 'scene');
+</script>
+</body>
+</html>
