@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Технический отчёт по SlugSvg: прямой рендер UI в world, X-ray pilot, UMG-композиция и границы текущей реализации.">
+  <meta name="description" content="Технический отчёт по SlugSvg: зачем нужен векторный UI pipeline, прямой рендер в world, UMG-композиция и границы текущей реализации.">
   <title>SlugSvg — World UI renderer pilot</title>
   <style>
     :root {
@@ -465,6 +465,37 @@
       text-transform: uppercase;
     }
 
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 58px;
+    }
+    .why-card {
+      min-height: 225px;
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(150deg, rgba(18, 27, 40, .9), rgba(10, 15, 23, .55));
+    }
+    .why-card span { color: var(--cyan); font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
+    .why-card h3 { margin: 47px 0 10px; font-size: 25px; line-height: 1.05; letter-spacing: -.035em; }
+    .why-card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .bonus {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+      gap: 24px;
+      align-items: center;
+      margin-top: 72px;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+    }
+    .bonus video { width: 100%; aspect-ratio: 1600 / 1054; object-fit: cover; border: 1px solid var(--line); border-radius: 12px; background: #05070a; }
+    .bonus-copy .tag { display: inline-block; margin-bottom: 10px; color: var(--muted); font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+    .bonus-copy h3 { margin: 0 0 12px; font-size: 29px; line-height: 1.05; letter-spacing: -.04em; }
+    .bonus-copy p { margin: 0; color: var(--muted); font-size: 14px; }
+
     .flow {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -593,7 +624,8 @@
       .chapter-grid { grid-template-columns: 1fr; }
       .chapter-id { position: static; }
       .triptych { grid-template-columns: 1fr; }
-      .video-pair, .boundary { grid-template-columns: 1fr; }
+      .video-pair, .boundary, .bonus { grid-template-columns: 1fr; }
+      .why-grid { grid-template-columns: 1fr; }
       .feature { grid-column: span 12; }
       .flow { grid-template-columns: 1fr 1fr; }
       .flow-step:nth-child(2) { border-right: 0; }
@@ -624,6 +656,7 @@
 <body>
   <div class="reading-progress" aria-hidden="true"><span></span></div>
   <nav class="rail" aria-label="Разделы документа">
+    <a href="#why" title="Зачем SlugSvg">Зачем</a>
     <a href="#world" title="World render">World render</a>
     <a href="#pilot" title="X-ray pilot">X-ray pilot</a>
     <a href="#composition" title="Composition">Composition</a>
@@ -638,17 +671,37 @@
     <div class="hero-copy">
       <div class="eyebrow">World UI renderer pilot</div>
       <h1>SlugSvg<span>world UI renderer.</span></h1>
-      <p class="hero-lede">Результаты пилота: Slug-only виджет рендерится в world напрямую, тот же backend поддерживает decal, а X-ray scanner собран как проверка на реальном игровом UI.</p>
-      <div class="hero-facts"><span>UMG</span><span>WORLD WIDGET</span><span>DECAL</span><span>X-RAY PILOT</span></div>
+      <p class="hero-lede">Векторная геометрия остаётся доступной до финального рендера: её можно масштабировать, анимировать, деформировать и выводить в UMG, world или decal через один backend.</p>
+      <div class="hero-facts"><span>UMG</span><span>WORLD WIDGET</span><span>DECAL</span><span>TEXT & ANIMATION</span></div>
     </div>
   </header>
 
   <section class="thesis" aria-label="Главный тезис">
-    <p>Цель работы — сохранить привычную сборку экрана в UMG и не создавать промежуточный render target, если виджет целиком состоит из Slug-контента.</p>
+    <p>Главное отличие SlugSvg — векторный контент не превращается в готовую картинку раньше времени.</p>
     <small>Ниже собраны editor- и PIE-записи, на которых основаны выводы. Это отчёт о текущем состоянии реализации, а не описание завершённого универсального UI runtime.</small>
   </section>
 
   <main>
+    <section class="chapter" id="why" data-nav="why">
+      <div class="chapter-grid">
+        <aside class="chapter-id">Chapter 00<br>Why vector UI</aside>
+        <div class="chapter-body">
+          <h2>Зачем UI сохранять векторным.</h2>
+          <p class="intro">Обычный WidgetComponent сначала собирает экран в render target, после чего сцена видит только текстуру. Это универсальный путь, но форма элементов, текст и структура композиции к моменту world render уже потеряны.</p>
+          <p class="intro">SlugSvg дольше сохраняет исходное представление: UMG отвечает за layout, а renderer получает геометрию SVG и текста вместе с параметрами заливки и групповых преобразований.</p>
+
+          <div class="why-grid">
+            <article class="why-card"><span>01 / RESOLUTION</span><h3>Нет фиксированного размера UI-текстуры</h3><p>Контуры пересчитываются для текущего масштаба и проекции. Не приходится заранее выбирать разрешение render target для мелкого текста, крупных экранов или близкой камеры.</p></article>
+            <article class="why-card"><span>02 / COMPOSITION</span><h3>Форма остаётся доступной renderer</h3><p>Один и тот же контент можно вывести в UMG, напрямую в world или как decal. Lens, CameraGroup и Transform3D работают с композицией, а не с уже сплющенной картинкой.</p></article>
+            <article class="why-card"><span>03 / MOTION</span><h3>Анимация не ограничена UV-текстурой</h3><p>Rigged SVG, material fills и текст могут оставаться отдельными элементами. WIP animation editor показывает направление к skeletal-like анимации SVG внутри UI pipeline.</p></article>
+          </div>
+
+          <div class="claim"><div class="claim-label">Практический эффект</div><p>Дизайнер продолжает собирать экран в UMG, а renderer получает больше информации и может применять операции, которые после rasterization потребовали бы отдельной текстуры, материала или специального pass.</p></div>
+          <div class="callout"><strong>Это не запрет на raster.</strong><p>Фотографии, scene feed, detector output и material/texture fills остаются растровыми там, где это естественно. SlugSvg нужен для тех частей UI, где полезно сохранить геометрию, текст и структуру композиции.</p></div>
+        </div>
+      </div>
+    </section>
+
     <section class="chapter" id="world" data-nav="world">
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 01<br>Draw surfaces</aside>
@@ -682,12 +735,12 @@
 
     <section class="chapter" id="pilot" data-nav="pilot">
       <div class="chapter-grid">
-        <aside class="chapter-id">Chapter 02<br>X-ray pilot</aside>
+        <aside class="chapter-id">Chapter 02<br>X-ray demo</aside>
         <div class="chapter-body">
-          <h2>X-ray scanner как проверка на игровом UI.</h2>
-          <p class="intro">В сканере одновременно есть полупрозрачный фон, SVG-графика, текст, scanlines и внешнее содержимое detector. Кроме статического совпадения здесь важна стабильность изображения при движении камеры и предмета.</p>
-          <p class="intro">Slug-демо сделано отдельной реализацией. Data asset позволяет переключаться между ним и текущим игровым виджетом в том же проекте, поэтому обе версии можно снимать в одинаковых условиях.</p>
-          <div class="claim"><div class="claim-label">Роль демо</div><p>X-ray используется как знакомый сложный экран для демонстрации возможностей renderer. Текущий игровой виджет остаётся основной реализацией; задача его замены здесь не ставится.</p></div>
+          <h2>X-ray scanner как демонстрация состава экрана.</h2>
+          <p class="intro">X-ray удобен как пример сложного UI: полупрозрачный фон, SVG-графика, текст, scanlines и внешнее содержимое detector можно собрать в одной Slug-композиции.</p>
+          <p class="intro">Это отдельный demo-виджет, который показывает применимость pipeline к такому классу экранов. Он не заменяет текущую реализацию scanner и не воспроизводит её 1:1.</p>
+          <div class="claim"><div class="claim-label">Что показывает сравнение</div><p>Обе реализации можно включить через data asset и снять в одинаковых условиях. Сравнение помогает оценить общий состав, читаемость в движении и различие render paths — не pixel parity.</p></div>
 
           <div class="ab-stage" aria-label="Сравнение Slug demo и текущего X-ray scanner">
             <img src="media/intake/screenshots/screenshot-004-current-xray-scanner.png" alt="Текущий X-ray scanner">
@@ -741,6 +794,15 @@
             <div class="flow-step"><span>03</span><strong>Paint</strong><p>Цвет, gradient, texture или UI material.</p></div>
             <div class="flow-step"><span>04</span><strong>Group transform</strong><p>Lens и CameraGroup применяются к содержимому контейнера.</p></div>
           </div>
+
+          <aside class="bonus" aria-label="WIP редактор SVG-анимаций">
+            <video controls preload="metadata" src="media/intake/video/video-012-animation-editor-wip-highlight.mp4"></video>
+            <div class="bonus-copy">
+              <span class="tag">WIP / exploratory tooling</span>
+              <h3>Редактор rig-анимации SVG</h3>
+              <p>Черновой editor показывает ключевую возможность: к векторной геометрии можно привязать rig и анимировать его на timeline. По сути это skeletal-like animation для SVG, остающаяся частью UI pipeline. Интерфейс редактора ещё рабочий и здесь показан только как направление развития.</p>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
@@ -813,9 +875,10 @@
               <ul>
                 <li>Slug-only widget render в world без промежуточного UI RT</li>
                 <li>SVG render как decal</li>
-                <li>X-ray demo с переключением на текущий игровой виджет</li>
+                <li>X-ray demo, собранный на Slug pipeline</li>
                 <li>Texture и animated material fills</li>
                 <li>Rigged SVG animation в UMG</li>
+                <li>WIP editor для rigged SVG animation</li>
                 <li>Slug Text и Rich Text composition</li>
                 <li>Shared Lens для mixed Slug content</li>
                 <li>CameraGroup + Transform3D в UMG Designer</li>
