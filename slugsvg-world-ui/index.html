@@ -472,15 +472,53 @@
       margin-top: 58px;
     }
     .why-card {
-      min-height: 225px;
+      min-height: 410px;
       padding: 25px;
       border: 1px solid var(--line);
       border-radius: 16px;
       background: linear-gradient(150deg, rgba(18, 27, 40, .9), rgba(10, 15, 23, .55));
     }
     .why-card span { color: var(--cyan); font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
-    .why-card h3 { margin: 47px 0 10px; font-size: 25px; line-height: 1.05; letter-spacing: -.035em; }
+    .why-card h3 { margin: 22px 0 10px; font-size: 25px; line-height: 1.05; letter-spacing: -.035em; }
     .why-card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .why-visual {
+      height: 142px;
+      margin: 24px 0 4px;
+      padding: 15px;
+      border: 1px solid rgba(139, 164, 190, .14);
+      border-radius: 11px;
+      background-color: #080d14;
+      background-image: linear-gradient(rgba(92, 128, 158, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 128, 158, .08) 1px, transparent 1px);
+      background-size: 12px 12px;
+      overflow: hidden;
+    }
+    .visual-label { color: #738396 !important; font-size: 9px !important; letter-spacing: .08em !important; }
+    .aa-compare, .scale-compare, .editable-compare { display: grid; grid-template-columns: repeat(2, 1fr); height: 100%; gap: 12px; }
+    .aa-sample, .scale-sample, .editable-sample { display: grid; place-items: center; align-content: center; gap: 10px; }
+    .aa-circle { width: 63px; height: 63px; background: #62e8ff; }
+    .aa-circle.raster {
+      clip-path: polygon(25% 0,75% 0,75% 8%,88% 8%,88% 20%,100% 20%,100% 80%,88% 80%,88% 92%,75% 92%,75% 100%,25% 100%,25% 92%,12% 92%,12% 80%,0 80%,0 20%,12% 20%,12% 8%,25% 8%);
+    }
+    .aa-circle.vector { border-radius: 50%; }
+    .scale-compare { grid-template-columns: repeat(3, 1fr); align-items: end; }
+    .scale-sample { gap: 7px; }
+    .scale-ring { position: relative; border: 3px solid #62e8ff; border-radius: 50%; }
+    .scale-ring::after { content: ''; position: absolute; width: 16%; aspect-ratio: 1; left: 42%; top: 42%; border-radius: 50%; background: #ffda5b; }
+    .scale-ring.small { width: 26px; height: 26px; border-width: 2px; }
+    .scale-ring.medium { width: 48px; height: 48px; }
+    .scale-ring.large { width: 76px; height: 76px; border-width: 4px; }
+    .transform-flow { display: grid; grid-template-columns: 1fr 20px 1fr 20px 1fr; align-items: center; height: 100%; gap: 5px; }
+    .flow-node { display: grid; place-items: center; align-content: center; gap: 9px; min-width: 0; }
+    .flow-arrow { color: #4e6073; font: 700 16px ui-monospace, monospace; text-align: center; }
+    .path-mark { width: 52px; height: 38px; border: 3px solid #62e8ff; border-radius: 50% 44% 55% 38%; transform: rotate(-13deg); }
+    .rotated-mark { width: 52px; height: 38px; border: 3px solid #8a64ff; border-radius: 50% 44% 55% 38%; transform: rotate(28deg); }
+    .pixel-mark { width: 52px; height: 38px; background: repeating-linear-gradient(90deg, #ffda5b 0 6px, #101722 6px 8px); clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%); }
+    .editable-compare { grid-template-columns: repeat(3, 1fr); }
+    .editable-shape { position: relative; width: 58px; height: 58px; border-radius: 50% 38% 53% 40%; transform: rotate(14deg); background: #62e8ff; }
+    .editable-shape.material { background: conic-gradient(from 45deg, #62e8ff, #8a64ff, #ff5c7a, #ffda5b, #62e8ff); }
+    .editable-shape.rig { background: rgba(98, 232, 255, .12); border: 2px solid #62e8ff; }
+    .editable-shape.rig::before { content: ''; position: absolute; inset: 8px; border: 1px dashed #ffda5b; border-radius: 50% 38% 53% 40%; }
+    .editable-shape.rig::after { content: ''; position: absolute; width: 7px; height: 7px; left: -4px; top: 22px; border-radius: 50%; background: #ffda5b; box-shadow: 24px -24px #ffda5b, 59px 10px #ffda5b, 27px 34px #ffda5b; }
     .source-note { margin: 24px 0 0; color: #687687; font-size: 12px; }
     .source-note a { color: #8da0b4; text-decoration-color: rgba(141, 160, 180, .35); text-underline-offset: 3px; }
     .source-note a:hover { color: var(--white); }
@@ -689,18 +727,55 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 00<br>Why vector UI</aside>
         <div class="chapter-body">
-          <h2>Что даёт векторный рендер.</h2>
-          <p class="intro">Любой UI в конце становится пикселями. Разница в том, когда это происходит. В растровом ассете сетка пикселей задана заранее. Вектор хранит контуры, а renderer растрирует их уже под фактический размер, DPI и transform текущего кадра.</p>
-          <p class="intro">Это преимущество работает прямо в UMG. World render, decal и 3D transform не создают его, а только используют ту же геометрию в других условиях.</p>
+          <h2>Почему не запечь всё в картинки.</h2>
+          <p class="intro">PNG хранит уже готовые пиксели. SVG хранит линии и контуры, из которых нужно построить изображение. SlugSvg получает эти контуры и решает, какие пиксели закрасить, только во время отрисовки виджета.</p>
+          <p class="intro">Отсюда четыре практических отличия. Они работают уже в обычном UMG. World render и decal — только ещё два места, где можно использовать тот же SVG.</p>
 
           <div class="why-grid">
-            <article class="why-card"><span>01 / ANTIALIASING</span><h3>AA считается на финальном контуре</h3><p>SlugSvg определяет покрытие пикселя после layout, scale и transform. Диагонали, окружности и тонкие линии получают сглаживание в том размере, в котором их действительно видит экран, а не наследуют лесенку или blur заранее созданной текстуры.</p></article>
-            <article class="why-card"><span>02 / SCALE &amp; DPI</span><h3>Размер источника не нужно угадывать</h3><p>Одна геометрия подходит для маленькой иконки и крупной панели. Для неё не нужны отдельные 1×, 2× и 4× версии, а качество края не привязано к разрешению исходной картинки или render target.</p></article>
-            <article class="why-card"><span>03 / TRANSFORMS</span><h3>Сначала transform, потом raster</h3><p>Дробный scale, rotation, lens и perspective применяются к контуру. После этого заново считается его покрытие. У растровой картинки те же операции растягивают и интерполируют уже готовые пиксели. TAA и motion blur при этом остаются отдельной задачей.</p></article>
-            <article class="why-card"><span>04 / LIVE GEOMETRY</span><h3>Форма остаётся рабочими данными</h3><p>Заливку можно заменить текстурой или материалом, группу — пропустить через Lens или CameraGroup, точки — анимировать rig-ом. Это обычные возможности Slug-виджетов в UMG, а не специальный режим только для world UI.</p></article>
+            <article class="why-card">
+              <span>01 / ANTIALIASING</span>
+              <figure class="why-visual aa-compare" aria-label="Сравнение ступенчатого края увеличенной растровой окружности и гладкого края векторной окружности">
+                <div class="aa-sample"><div class="aa-circle raster"></div><span class="visual-label">BITMAP ×4</span></div>
+                <div class="aa-sample"><div class="aa-circle vector"></div><span class="visual-label">VECTOR AT SIZE</span></div>
+              </figure>
+              <h3>Чистые края в текущем размере</h3>
+              <p>У PNG край уже записан в сетку пикселей. При увеличении или повороте renderer фильтрует эту сетку, поэтому край может стать мягким или ступенчатым. SlugSvg заново считает, какую часть каждого экранного пикселя закрывает контур. Так AA соответствует реальному размеру элемента.</p>
+            </article>
+            <article class="why-card">
+              <span>02 / SCALE &amp; DPI</span>
+              <figure class="why-visual scale-compare" aria-label="Один и тот же векторный знак в трёх размерах">
+                <div class="scale-sample"><div class="scale-ring small"></div><span class="visual-label">16 PX</span></div>
+                <div class="scale-sample"><div class="scale-ring medium"></div><span class="visual-label">48 PX</span></div>
+                <div class="scale-sample"><div class="scale-ring large"></div><span class="visual-label">128 PX</span></div>
+              </figure>
+              <h3>Один SVG для разных размеров</h3>
+              <p>Ту же иконку можно поставить в маленькую кнопку, крупную панель или интерфейс с другим DPI. При каждом размере SlugSvg снова строит изображение из исходных контуров. Не нужно экспортировать отдельные 1×, 2× и 4× картинки только ради чистого края.</p>
+            </article>
+            <article class="why-card">
+              <span>03 / TRANSFORMS</span>
+              <figure class="why-visual transform-flow" aria-label="Порядок обработки вектора: исходный контур, трансформация, затем пиксели">
+                <div class="flow-node"><div class="path-mark"></div><span class="visual-label">CONTOUR</span></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-node"><div class="rotated-mark"></div><span class="visual-label">ROTATE</span></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-node"><div class="pixel-mark"></div><span class="visual-label">PIXELS</span></div>
+              </figure>
+              <h3>Сначала поворот, потом пиксели</h3>
+              <p>Scale, rotation, Lens и perspective меняют сам контур. В пиксели превращается уже итоговая форма. Растровый UI, наоборот, вращает и растягивает готовую картинку — её край приходится снова фильтровать. TAA и motion blur при этом остаются отдельной задачей.</p>
+            </article>
+            <article class="why-card">
+              <span>04 / SVG ASSET</span>
+              <figure class="why-visual editable-compare" aria-label="Один контур с обычной заливкой, материалом и точками анимационного rig">
+                <div class="editable-sample"><div class="editable-shape"></div><span class="visual-label">COLOR</span></div>
+                <div class="editable-sample"><div class="editable-shape material"></div><span class="visual-label">MATERIAL</span></div>
+                <div class="editable-sample"><div class="editable-shape rig"></div><span class="visual-label">RIG</span></div>
+              </figure>
+              <h3>Контур и заливка меняются отдельно</h3>
+              <p>Одну форму можно залить цветом, текстурой или анимированным материалом. Её точки можно двигать rig-анимацией. Для новой заливки или деформации не приходится экспортировать новую картинку.</p>
+            </article>
           </div>
 
-          <div class="claim"><div class="claim-label">Что получает дизайнер</div><p>Один SVG можно использовать в разных размерах, красить динамическим материалом, деформировать, анимировать и собирать рядом с обычными UMG-элементами — без экспорта новой текстуры после каждого изменения формы или масштаба.</p></div>
+          <div class="claim"><div class="claim-label">Что получает дизайнер</div><p>Дизайнер по-прежнему собирает экран в UMG. Разница в том, что Slug-виджет хранит SVG, а не прямоугольник с готовой картинкой. Поэтому один ассет можно чисто масштабировать, красить материалом, пропускать через Lens и анимировать.</p></div>
           <div class="callout"><strong>Вектор не заменяет raster.</strong><p>Фотографии, шум, живописные изображения, scene feed и detector output естественно оставлять текстурами. Сложная векторная сцена тоже не становится автоматически дешёвой. Выигрыш появляется там, где изображение действительно состоит из контуров, текста и управляемых заливок.</p></div>
           <p class="source-note">Справочно: <a href="https://www.w3.org/TR/SVG2/" target="_blank" rel="noreferrer">W3C SVG 2</a> о масштабируемой векторной модели и <a href="https://learn.microsoft.com/en-us/windows/win32/direct2d/direct2d-overview" target="_blank" rel="noreferrer">Direct2D overview</a> о per-primitive antialiasing.</p>
         </div>
