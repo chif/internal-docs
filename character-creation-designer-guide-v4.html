@@ -25,6 +25,7 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { min-height: 100%; }
   body {
     margin: 0;
@@ -94,6 +95,32 @@
   .result b { color: var(--cyan); font: 700 9px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
   .result span { color: var(--muted); font-size: 12px; }
   .privacy-note { margin: -5px 0 14px; color: var(--amber); font: 700 9px/1.45 var(--mono); letter-spacing: .04em; }
+
+  .framework-overview { display: grid; gap: 10px; }
+  .framework-summary {
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid rgba(87,216,255,.42);
+    background: var(--cyan-soft);
+  }
+  .framework-summary b { color: var(--cyan); font: 700 9px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
+  .framework-summary span { color: var(--text); font-size: 13px; }
+  .framework-flow { display: grid; grid-template-columns: minmax(190px,.8fr) 42px minmax(360px,1.7fr); align-items: stretch; }
+  .flow-arrow { display: grid; place-items: center; color: var(--cyan); font: 700 20px/1 var(--mono); }
+  .flow-card { min-width: 0; padding: 15px; border: 1px solid var(--line); background: var(--panel); }
+  .flow-card--chargen { border-color: rgba(255,199,106,.36); background: var(--amber-soft); }
+  .flow-tag { display: block; margin-bottom: 9px; color: var(--dim); font: 700 9px/1 var(--mono); letter-spacing: .11em; text-transform: uppercase; }
+  .flow-card--chargen .flow-tag { color: var(--amber); }
+  .flow-card--reuse .flow-tag { color: var(--cyan); }
+  .flow-card h2 { margin: 0; font: 650 18px/1.15 var(--mono); overflow-wrap: anywhere; }
+  .flow-card p { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+  .reuse-grid { margin-top: 14px; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 7px; }
+  .reuse-node { padding: 11px; border: 1px solid var(--line-soft); background: #090d12; }
+  .reuse-node b { display: block; color: var(--text); font: 650 11px/1.25 var(--mono); }
+  .reuse-node span { display: block; margin-top: 5px; color: var(--dim); font-size: 11px; }
+  .reuse-node--output { border-color: rgba(87,216,255,.35); }
 
   .shot-tabs { display: flex; gap: 4px; margin: 0 0 7px; overflow-x: auto; }
   .shot-tab {
@@ -170,6 +197,10 @@
     .asset-button { min-width: 145px; }
     .workspace { padding: 18px 11px 34px; }
     .result, .caption, .fact { grid-template-columns: 1fr; gap: 4px; }
+    .framework-summary { align-items: flex-start; flex-direction: column; }
+    .framework-flow { grid-template-columns: 1fr; }
+    .flow-arrow { min-height: 34px; transform: rotate(90deg); }
+    .reuse-grid { grid-template-columns: 1fr; }
     .note { max-width: 155px; padding: 4px 5px 4px 22px; font-size: 7px; }
     .note::before { left: 4px; width: 13px; height: 13px; font-size: 7px; }
   }
@@ -181,7 +212,8 @@
     <div class="brand"><strong>Character Setup</strong><span>Redacted Asset Map / v4</span></div>
     <div class="nav-label">Что настраиваем</div>
     <nav class="asset-nav" aria-label="Ассеты настройки персонажа">
-      <button class="asset-button" type="button" data-asset="scene" aria-selected="true"><small>Сцена шага</small><b>DA_ChargenSceneStates</b></button>
+      <button class="asset-button" type="button" data-asset="overview" aria-selected="true"><small>Начните здесь</small><b>Как устроен preview</b></button>
+      <button class="asset-button" type="button" data-asset="scene" aria-selected="false"><small>Сцена шага</small><b>DA_ChargenSceneStates</b></button>
       <button class="asset-button" type="button" data-asset="camera" aria-selected="false"><small>Кадр и свет</small><b>DA_FullScaleCameraSocket</b></button>
       <button class="asset-button" type="button" data-asset="appearance" aria-selected="false"><small>Список настроек</small><b>DA_ChargenAppearanceOptions</b></button>
       <button class="asset-button" type="button" data-asset="facetune" aria-selected="false"><small>Face Tune</small><b>DA_ChargenFaceTuneOptions</b></button>
@@ -193,15 +225,38 @@
   <main>
     <div class="workspace">
       <header class="topbar">
-        <div class="eyebrow" id="asset-role">Сцена шага</div>
-        <h1 id="asset-name">DA_ChargenSceneStates</h1>
-        <p class="asset-search">Имя ассета указано без пути в Content Browser.</p>
+        <div class="eyebrow" id="asset-role">Техническая основа</div>
+        <h1 id="asset-name">Как устроен preview</h1>
+        <p class="asset-search" id="asset-search">Чарген подключается к существующей системе preview-сцен проекта.</p>
       </header>
 
-      <div class="privacy-note">REDACTED VERSION — чувствительные данные размыты непосредственно в PNG</div>
+      <div class="privacy-note" id="privacy-note">REDACTED VERSION — чувствительные данные размыты непосредственно в PNG</div>
 
-      <div class="result"><b>Результат</b><span id="asset-result">Какой preview показывается на выбранном шаге.</span></div>
+      <div class="result"><b>Суть</b><span id="asset-result">Мы переиспользуем принятую в проекте систему preview, а не создаём параллельную.</span></div>
 
+      <section class="framework-overview" id="framework-overview" aria-label="Связь чаргена с системой preview">
+        <div class="framework-summary"><b>Existing project tech</b><span>Камера, свет, расстановка и отрисовка персонажей работают через уже существующий Preview framework.</span></div>
+        <div class="framework-flow">
+          <article class="flow-card flow-card--chargen">
+            <span class="flow-tag">Добавлено для чаргена</span>
+            <h2>DA_ChargenSceneStates</h2>
+            <p>Выбирает конфигурацию для текущего Step / SubStep и передаёт её в общую систему preview.</p>
+          </article>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <article class="flow-card flow-card--reuse">
+            <span class="flow-tag">Переиспользуем из проекта</span>
+            <h2>Project Preview Framework</h2>
+            <div class="reuse-grid">
+              <div class="reuse-node"><b>Formation</b><span>слоты и позиции</span></div>
+              <div class="reuse-node"><b>Camera Config</b><span>кадр и привязка</span></div>
+              <div class="reuse-node"><b>Light Preset</b><span>освещение</span></div>
+              <div class="reuse-node reuse-node--output"><b>Preview Renderer</b><span>готовое изображение</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div id="asset-details" hidden>
       <div class="shot-tabs" id="shot-tabs" role="tablist" aria-label="Скриншоты ассета"></div>
       <section class="visual" aria-label="Поля выбранного ассета">
         <button class="shot-button" id="shot-button" type="button" aria-label="Открыть скриншот в полном размере">
@@ -214,6 +269,7 @@
       </section>
 
       <div class="fact" id="asset-fact"><b>Важно</b><span id="asset-fact-text"></span></div>
+      </div>
     </div>
   </main>
 </div>
@@ -225,6 +281,12 @@
 
 <script>
   const assets = {
+    overview: {
+      role: 'Техническая основа',
+      name: 'Как устроен preview',
+      search: 'Чарген подключается к существующей системе preview-сцен проекта.',
+      result: 'Мы переиспользуем принятую в проекте систему preview, а не создаём параллельную.'
+    },
     scene: {
       role: 'Сцена шага',
       name: 'DA_ChargenSceneStates',
@@ -382,7 +444,11 @@
 
   const assetRole = document.querySelector('#asset-role');
   const assetName = document.querySelector('#asset-name');
+  const assetSearch = document.querySelector('#asset-search');
   const assetResult = document.querySelector('#asset-result');
+  const privacyNote = document.querySelector('#privacy-note');
+  const frameworkOverview = document.querySelector('#framework-overview');
+  const assetDetails = document.querySelector('#asset-details');
   const assetImage = document.querySelector('#asset-image');
   const assetNotes = document.querySelector('#asset-notes');
   const shotLabel = document.querySelector('#shot-label');
@@ -393,7 +459,7 @@
   const viewer = document.querySelector('#viewer');
   const viewerImage = document.querySelector('#viewer-image');
   const viewerNotes = document.querySelector('.viewer-notes');
-  let currentAsset = 'scene';
+  let currentAsset = 'overview';
   let currentShot = 0;
 
   function makeNote([x, y, number, label]) {
@@ -423,7 +489,16 @@
     document.querySelectorAll('.asset-button').forEach(button => button.setAttribute('aria-selected', String(button.dataset.asset === key)));
     assetRole.textContent = asset.role;
     assetName.textContent = asset.name;
+    assetSearch.textContent = asset.search || 'Имя ассета указано без пути в Content Browser.';
     assetResult.textContent = asset.result;
+    const isOverview = key === 'overview';
+    frameworkOverview.hidden = !isOverview;
+    assetDetails.hidden = isOverview;
+    privacyNote.hidden = isOverview;
+    if (isOverview) {
+      history.replaceState(null, '', '#overview');
+      return;
+    }
     assetFactText.textContent = asset.fact;
     shotTabs.replaceChildren(...asset.shots.map((shot, index) => {
       const tab = document.createElement('button');
@@ -451,7 +526,7 @@
   viewer.addEventListener('click', event => { if (event.target === viewer) viewer.close(); });
 
   const initialAsset = location.hash.slice(1);
-  renderAsset(Object.hasOwn(assets, initialAsset) ? initialAsset : 'scene');
+  renderAsset(Object.hasOwn(assets, initialAsset) ? initialAsset : 'overview');
 </script>
 </body>
 </html>
