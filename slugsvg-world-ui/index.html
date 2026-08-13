@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="SlugSvg world UI renderer: direct world rendering, X-ray pilot, composition features, authoring and current boundaries.">
-  <title>SlugSvg — Vector UI beyond the flatland</title>
+  <meta name="description" content="Технический отчёт по SlugSvg: прямой рендер UI в world, X-ray pilot, UMG-композиция и границы текущей реализации.">
+  <title>SlugSvg — World UI renderer pilot</title>
   <style>
     :root {
       color-scheme: dark;
@@ -407,7 +407,7 @@
       font: 800 10px ui-monospace, SFMono-Regular, Consolas, monospace;
       letter-spacing: .08em;
     }
-    .ab-label.legacy { right: 14px; }
+    .ab-label.current { right: 14px; }
     .ab-label.slug { left: 14px; color: var(--cyan); }
     .ab-control {
       position: absolute;
@@ -637,15 +637,15 @@
     <video class="hero-media" autoplay muted loop playsinline preload="metadata" poster="media/intake/screenshots/screenshot-003-decal-demo.png" src="media/intake/video/video-001-slug-widget-decal-render.mp4"></video>
     <div class="hero-copy">
       <div class="eyebrow">World UI renderer pilot</div>
-      <h1>Vector UI<span>beyond the flatland.</span></h1>
-      <p class="hero-lede">SlugSvg вырос из SVG-виджета в единый pipeline для UMG-композиции и прямого рендера в world — без обязательного промежуточного render target для UI-слоя.</p>
+      <h1>SlugSvg<span>world UI renderer.</span></h1>
+      <p class="hero-lede">Результаты пилота: Slug-only виджет рендерится в world напрямую, тот же backend поддерживает decal, а X-ray scanner собран как проверка на реальном игровом UI.</p>
       <div class="hero-facts"><span>UMG</span><span>WORLD WIDGET</span><span>DECAL</span><span>X-RAY PILOT</span></div>
     </div>
   </header>
 
   <section class="thesis" aria-label="Главный тезис">
-    <p>Задача была не в том, чтобы показать SVG в мире. Задача — сохранить <em>обычный UI authoring</em>, но убрать текстурную прослойку там, где весь слой уже принадлежит Slug renderer.</p>
-    <small>Этот документ — не полный API reference. Это последовательность визуальных доказательств: от draw surface до production-shaped пилота, композиционных возможностей и текущих границ решения.</small>
+    <p>Цель работы — сохранить привычную сборку экрана в UMG и не создавать промежуточный render target, если виджет целиком состоит из Slug-контента.</p>
+    <small>Ниже собраны editor- и PIE-записи, на которых основаны выводы. Это отчёт о текущем состоянии реализации, а не описание завершённого универсального UI runtime.</small>
   </section>
 
   <main>
@@ -653,28 +653,28 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 01<br>Draw surfaces</aside>
         <div class="chapter-body">
-          <h2>World становится ещё одним canvas.</h2>
-          <p class="intro">Backend умеет рисовать Slug-only widget напрямую в world и использовать тот же векторный контент как decal. Для UI-слоя не нужен промежуточный render target: элементы проходят через наш renderer сразу в целевую поверхность.</p>
-          <div class="claim"><div class="claim-label">Что доказано</div><p>Один SlugSvg content path показан в трёх контекстах: обычный widget, world placement и decal projection.</p></div>
+          <h2>Прямой рендер в world и decal.</h2>
+          <p class="intro">Slug-only виджет можно передать в world render path без предварительной отрисовки UI в текстуру. Для decal используется тот же подготовленный Slug-контент, но с проекцией на геометрию сцены.</p>
+          <div class="claim"><div class="claim-label">Проверено</div><p>Один тестовый контент показан как UMG-виджет, world entity и decal. На видео виден переход между этими тремя вариантами.</p></div>
 
           <div class="triptych">
             <article class="card">
               <button class="media-button" data-full="media/intake/screenshots/screenshot-001-slug-widget.png" aria-label="Открыть Slug widget"><img src="media/intake/screenshots/screenshot-001-slug-widget.png" alt="SlugSvg widget demo"></button>
-              <div class="card-copy"><span class="number">01 / WIDGET</span><h3>Slug widget</h3><p>Исходная композиция остаётся обычным UMG-виджетом.</p></div>
+              <div class="card-copy"><span class="number">01 / WIDGET</span><h3>UMG-источник</h3><p>Исходный контент собран как обычный виджет.</p></div>
             </article>
             <article class="card">
               <button class="media-button" data-full="media/intake/screenshots/screenshot-002-door-selected-in-editor.png" aria-label="Открыть world widget в редакторе"><img src="media/intake/screenshots/screenshot-002-door-selected-in-editor.png" alt="World widget selected in Unreal Editor"></button>
-              <div class="card-copy"><span class="number">02 / WORLD</span><h3>Placed in world</h3><p>Entity и её геометрия видны и настраиваются в редакторе.</p></div>
+              <div class="card-copy"><span class="number">02 / WORLD</span><h3>World entity</h3><p>Компонент и его геометрия доступны в редакторе сцены.</p></div>
             </article>
             <article class="card">
               <button class="media-button" data-full="media/intake/screenshots/screenshot-003-decal-demo.png" aria-label="Открыть decal demo"><img src="media/intake/screenshots/screenshot-003-decal-demo.png" alt="SlugSvg decal demo"></button>
-              <div class="card-copy"><span class="number">03 / DECAL</span><h3>Projected as decal</h3><p>Тот же визуальный язык переносится на поверхность сцены.</p></div>
+              <div class="card-copy"><span class="number">03 / DECAL</span><h3>Decal</h3><p>Slug-контент проецируется на поверхность сцены.</p></div>
             </article>
           </div>
 
           <figure class="media-block">
             <video controls preload="metadata" poster="media/intake/screenshots/screenshot-003-decal-demo.png" src="media/intake/video/video-001-slug-widget-decal-render.mp4"></video>
-            <figcaption class="media-meta"><span><strong>World render proof</strong> · widget + selected entity + decal</span><span>29.4 sec · captured in editor</span></figcaption>
+            <figcaption class="media-meta"><span><strong>World render</strong> · виджет, выбранная entity и decal</span><span>29.4 sec · Unreal Editor</span></figcaption>
           </figure>
         </div>
       </div>
@@ -684,23 +684,23 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 02<br>X-ray pilot</aside>
         <div class="chapter-body">
-          <h2>Пилот там, где различия нельзя спрятать.</h2>
-          <p class="intro">X-ray scanner — не чистый tech sample. Это полупрозрачный игровой экран, который игрок держит в руках: композиция должна совпасть с legacy, остаться читаемой в движении и сохранить внешний runtime-контракт tool.</p>
-          <p class="intro">Legacy-реализация остаётся рядом и может быть возвращена через data asset. Поэтому visual parity сравнивается в одном проекте, а не по памяти или по отдельному макету.</p>
-          <div class="claim"><div class="claim-label">Критерий</div><p>Финальный авторитет — уже собранный legacy scanner в редакторе. Figma использовалась как источник и ориентир, но не как повод передизайнить экран.</p></div>
+          <h2>X-ray scanner как проверка на игровом UI.</h2>
+          <p class="intro">В сканере одновременно есть полупрозрачный фон, SVG-графика, текст, scanlines и внешнее содержимое detector. Кроме статического совпадения здесь важна стабильность изображения при движении камеры и предмета.</p>
+          <p class="intro">Slug-демо сделано отдельной реализацией. Data asset позволяет переключаться между ним и текущим игровым виджетом в том же проекте, поэтому обе версии можно снимать в одинаковых условиях.</p>
+          <div class="claim"><div class="claim-label">Роль демо</div><p>X-ray используется как знакомый сложный экран для демонстрации возможностей renderer. Текущий игровой виджет остаётся основной реализацией; задача его замены здесь не ставится.</p></div>
 
-          <div class="ab-stage" aria-label="Сравнение Slug и legacy X-ray scanner">
-            <img src="media/intake/screenshots/screenshot-004-legacy-xray-scanner.png" alt="Legacy X-ray scanner">
+          <div class="ab-stage" aria-label="Сравнение Slug demo и текущего X-ray scanner">
+            <img src="media/intake/screenshots/screenshot-004-current-xray-scanner.png" alt="Текущий X-ray scanner">
             <img class="after" src="media/intake/screenshots/screenshot-005-slug-xray-scanner.png" alt="Slug X-ray scanner">
-            <span class="ab-label slug">SLUG</span><span class="ab-label legacy">LEGACY</span>
-            <input class="ab-control" type="range" min="0" max="100" value="50" aria-label="Положение разделителя Slug и legacy">
+            <span class="ab-label slug">SLUG DEMO</span><span class="ab-label current">CURRENT</span>
+            <input class="ab-control" type="range" min="0" max="100" value="50" aria-label="Положение разделителя Slug demo и текущего виджета">
           </div>
-          <div class="ab-help"><span>← Slug implementation</span><span>Передвиньте разделитель</span><span>Legacy reference →</span></div>
+          <div class="ab-help"><span>← Slug demo</span><span>Передвиньте разделитель</span><span>Текущий виджет →</span></div>
 
           <div class="video-pair">
             <article class="card">
-              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-004-legacy-xray-scanner.png" src="media/intake/video/video-002-legacy-xray-post-motion-blur.mp4"></video>
-              <div class="video-title"><span>Legacy scanner</span><span>post motion blur path</span></div>
+              <video controls preload="metadata" poster="media/intake/screenshots/screenshot-004-current-xray-scanner.png" src="media/intake/video/video-002-current-xray-post-motion-blur.mp4"></video>
+              <div class="video-title"><span>Текущий X-ray scanner</span><span>post motion blur path</span></div>
             </article>
             <article class="card">
               <video controls preload="metadata" poster="media/intake/screenshots/screenshot-005-slug-xray-scanner.png" src="media/intake/video/video-003-slug-xray-scanner.mp4"></video>
@@ -708,7 +708,7 @@
             </article>
           </div>
 
-          <div class="callout"><strong>Важная граница.</strong><p>Утверждение «без render target» относится к Slug UI-слою. Detector, scene feed или другой внешний визуальный источник остаются отдельной системой и могут приходить как texture/material. Пилот не требует переписывать их в вектор.</p></div>
+          <div class="callout"><strong>Что остаётся внешним.</strong><p>Без render target работает Slug UI-слой. Изображение detector или scene feed по-прежнему может поступать как texture/material; переводить этот источник в векторный renderer не требуется.</p></div>
         </div>
       </div>
     </section>
@@ -717,29 +717,29 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 03<br>From SVG to UI</aside>
         <div class="chapter-body">
-          <h2>Не SVG-картинка. <span class="violet">Композиционный pipeline.</span></h2>
-          <p class="intro">Реальный экран требует больше, чем пути и заливки. Внутри UMG Slug-контент уже сочетается с rigged animation, texture/material brushes, Slug Text и Rich Text. Эти возможности используют один renderer и остаются отдельными редактируемыми виджетами.</p>
+          <h2>Состав Slug-композиции в UMG.</h2>
+          <p class="intro">Экран не обязан быть одним SVG. В одной UMG-иерархии можно сочетать rigged SVG, заливки текстурой или материалом, Slug Text и Rich Text. Каждый элемент остаётся отдельным настраиваемым виджетом.</p>
 
           <div class="feature-grid">
             <article class="card feature">
               <video controls preload="metadata" src="media/intake/video/video-004-rigged-arrow-umg-animation-demo.mp4"></video>
-              <div class="card-copy"><span class="tag">Animation</span><h3>Rigged SVG in UMG</h3><p>Authored rig motion воспроизводится внутри обычной widget-композиции, без смены surface.</p></div>
+              <div class="card-copy"><span class="tag">Animation</span><h3>Rigged SVG</h3><p>Rig-анимация работает внутри обычной UMG-композиции.</p></div>
             </article>
             <article class="card feature">
               <video controls preload="metadata" poster="media/intake/screenshots/screenshot-011-svg-animated-material-fill.png" src="media/intake/video/video-006-svg-animated-material-fill.mp4"></video>
-              <div class="card-copy"><span class="tag">Paint</span><h3>Texture and material fills</h3><p>SVG coverage может заполняться texture brush или анимированным UI material.</p></div>
+              <div class="card-copy"><span class="tag">Paint</span><h3>Texture и material fill</h3><p>Форма SVG используется как маска для texture brush или анимированного UI material.</p></div>
             </article>
             <article class="card feature wide">
               <video controls preload="metadata" poster="media/intake/screenshots/screenshot-012-slug-rich-text.png" src="media/intake/video/video-011-text-demo-additional.mp4"></video>
-              <div class="card-copy"><span class="tag">Typography</span><h3>Slug Text and Rich Text</h3><p>Кириллица, shaping, wrapping, разные стили и inline runs. Текст — часть Slug pipeline, а не заранее растрированная подпись.</p></div>
+              <div class="card-copy"><span class="tag">Typography</span><h3>Slug Text и Rich Text</h3><p>Показаны кириллица, shaping, перенос строк, разные стили и inline runs. Текст рендерится внутри Slug pipeline.</p></div>
             </article>
           </div>
 
           <div class="flow" aria-label="Слои композиции">
-            <div class="flow-step"><span>01</span><strong>Layout</strong><p>UMG задаёт структуру, размеры и отношения между элементами.</p></div>
-            <div class="flow-step"><span>02</span><strong>Vector content</strong><p>SVG и текст сохраняют аналитическое покрытие.</p></div>
-            <div class="flow-step"><span>03</span><strong>Paint</strong><p>Solid, gradient, texture или UI material.</p></div>
-            <div class="flow-step"><span>04</span><strong>Composition</strong><p>Общие Lens и Camera domains применяются к потомкам.</p></div>
+            <div class="flow-step"><span>01</span><strong>Layout</strong><p>UMG задаёт иерархию и размеры элементов.</p></div>
+            <div class="flow-step"><span>02</span><strong>Geometry</strong><p>SVG и текст дают геометрию покрытия.</p></div>
+            <div class="flow-step"><span>03</span><strong>Paint</strong><p>Цвет, gradient, texture или UI material.</p></div>
+            <div class="flow-step"><span>04</span><strong>Group transform</strong><p>Lens и CameraGroup применяются к содержимому контейнера.</p></div>
           </div>
         </div>
       </div>
@@ -749,8 +749,8 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 04<br>Shared transforms</aside>
         <div class="chapter-body">
-          <h2>Эффект принадлежит <span class="accent">стеку</span>, не картинке.</h2>
-          <p class="intro">Lens работает как container: одна screen-space деформация применяется ко всему Slug-содержимому внутри — SVG, Slug Text, Rich Text и brush/material carriers. Это позволяет собирать экран как группу, а не повторять параметры на каждом leaf widget.</p>
+          <h2>Общие преобразования для группы виджетов.</h2>
+          <p class="intro">Lens — контейнер с одной screen-space деформацией для всех Slug-потомков. SVG, Slug Text, Rich Text и material/brush content получают одинаковые параметры без настройки каждого leaf widget.</p>
 
           <div class="video-pair">
             <article class="card">
@@ -763,12 +763,12 @@
             </article>
           </div>
 
-          <p class="intro" style="margin-top:82px">Для глубины разделены две ответственности: <strong>CameraGroup</strong> задаёт общую перспективу всему стеку, а <strong>Transform3D</strong> задаёт model rotation и Z отдельному потомку. Layout остаётся двумерным, а результат виден непосредственно в UMG Designer.</p>
+          <p class="intro" style="margin-top:82px"><strong>CameraGroup</strong> задаёт камеру для содержимого контейнера. <strong>Transform3D</strong> хранит rotation и Z конкретного потомка. Эти параметры не меняют двумерный layout; перспектива отображается в UMG Designer.</p>
           <figure class="media-block">
             <video controls preload="metadata" src="media/intake/video/video-010-3d-transform.mp4"></video>
-            <figcaption class="media-meta"><span><strong>CameraGroup + Transform3D</strong> · shared camera, independent model transforms</span><span>Designer preview · 7.2 sec</span></figcaption>
+            <figcaption class="media-meta"><span><strong>CameraGroup + Transform3D</strong> · общая камера, отдельные transform-параметры</span><span>UMG Designer · 7.2 sec</span></figcaption>
           </figure>
-          <div class="callout"><strong>Текущая область поддержки.</strong><p>CameraGroup и Transform3D доказаны для UMG/Slate preview. Direct-world capture пока явно отвергает эти scopes: расширение world instance ABI оставлено отдельной задачей.</p></div>
+          <div class="callout"><strong>Ограничение.</strong><p>CameraGroup и Transform3D сейчас поддержаны в UMG/Slate. Direct-world capture эти scopes не принимает: для него потребуется отдельно расширить world instance ABI.</p></div>
         </div>
       </div>
     </section>
@@ -777,24 +777,24 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 05<br>Authoring & insight</aside>
         <div class="chapter-body">
-          <h2>Backend полезен, только если им можно пользоваться.</h2>
-          <p class="intro">Renderer встроен в нормальный production loop: Figma Import помогает получить исходную структуру, UMG остаётся местом композиции и настройки, а Atlas Viewer делает GPU-ресурсы наблюдаемыми.</p>
+          <h2>Импорт, редактирование и диагностика.</h2>
+          <p class="intro">Figma Import создаёт редактируемые UMG/Slug assets, дальнейшая сборка выполняется в UMG Designer. Atlas Viewer показывает содержимое atlas и декодированную геометрию во время отладки.</p>
 
           <div class="feature-grid">
             <article class="card feature">
               <video controls preload="metadata" poster="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" src="media/intake/video/video-005-figma-import-result-demo.mp4"></video>
-              <div class="card-copy"><span class="tag">Import</span><h3>Figma to editable assets</h3><p>Дизайн используется как источник, но результат остаётся набором UMG/Slug assets, а не закрытым raster export.</p></div>
+              <div class="card-copy"><span class="tag">Import</span><h3>Figma Import</h3><p>Результат импорта — набор редактируемых UMG/Slug assets, а не растрированный снимок экрана.</p></div>
             </article>
             <article class="card feature">
               <video controls preload="metadata" poster="media/intake/screenshots/screenshot-009-debug-atlas-viewer.png" src="media/intake/video/video-009-debug-atlas-viewer.mp4"></video>
-              <div class="card-copy"><span class="tag">Debug</span><h3>Live atlas viewer</h3><p>Загрузка atlas и декодированная геометрия доступны для диагностики прямо в редакторе.</p></div>
+              <div class="card-copy"><span class="tag">Debug</span><h3>Atlas Viewer</h3><p>Atlas и декодированная геометрия доступны для проверки в редакторе.</p></div>
             </article>
           </div>
 
           <div class="triptych">
-            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-006-figma-import-character-summary.png" aria-label="Открыть Figma import character summary"><img src="media/intake/screenshots/screenshot-006-figma-import-character-summary.png" alt="Figma import character summary"></button><div class="card-copy"><span class="number">FIGMA 01</span><h3>Product screen</h3><p>Сложная композиция импортируется как редактируемая структура.</p></div></article>
-            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-007-figma-import-message-list.png" aria-label="Открыть Figma import message list"><img src="media/intake/screenshots/screenshot-007-figma-import-message-list.png" alt="Figma import message list in UMG"></button><div class="card-copy"><span class="number">FIGMA 02</span><h3>Reusable widget</h3><p>Результат виден в обычном UMG Designer.</p></div></article>
-            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" aria-label="Открыть Figma import X-ray UI"><img src="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" alt="Figma imported X-ray UI"></button><div class="card-copy"><span class="number">FIGMA 03</span><h3>Pilot source</h3><p>X-ray design помогает восстанавливать элементы, но не переопределяет legacy parity.</p></div></article>
+            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-006-figma-import-character-summary.png" aria-label="Открыть Figma import character summary"><img src="media/intake/screenshots/screenshot-006-figma-import-character-summary.png" alt="Figma import character summary"></button><div class="card-copy"><span class="number">FIGMA 01</span><h3>Составной экран</h3><p>Импортированная композиция остаётся редактируемой.</p></div></article>
+            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-007-figma-import-message-list.png" aria-label="Открыть Figma import message list"><img src="media/intake/screenshots/screenshot-007-figma-import-message-list.png" alt="Figma import message list in UMG"></button><div class="card-copy"><span class="number">FIGMA 02</span><h3>Переиспользуемый виджет</h3><p>Результат открыт в обычном UMG Designer.</p></div></article>
+            <article class="card"><button class="media-button" data-full="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" aria-label="Открыть Figma import X-ray UI"><img src="media/intake/screenshots/screenshot-008-figma-import-xray-ui.png" alt="Figma imported X-ray UI"></button><div class="card-copy"><span class="number">FIGMA 03</span><h3>Исходник X-ray</h3><p>Figma используется как ориентир при сборке демонстрационного виджета.</p></div></article>
           </div>
         </div>
       </div>
@@ -804,16 +804,16 @@
       <div class="chapter-grid">
         <aside class="chapter-id">Chapter 06<br>Claim boundary</aside>
         <div class="chapter-body">
-          <h2>Что мы утверждаем. И чего <span class="violet">пока нет.</span></h2>
-          <p class="intro">Пилот полезен только с честной границей. Ниже — текущий proof, а не обещание универсального UI runtime.</p>
+          <h2>Результат пилота и оставшаяся работа.</h2>
+          <p class="intro">Этот список отделяет показанные в записях сценарии от задач, которые ещё не закрыты.</p>
 
           <div class="boundary">
             <section class="boundary-box">
-              <h3>Доказано текущими demos</h3>
+              <h3>Проверено в editor/PIE</h3>
               <ul>
                 <li>Slug-only widget render в world без промежуточного UI RT</li>
                 <li>SVG render как decal</li>
-                <li>X-ray pilot с переключаемой legacy-реализацией</li>
+                <li>X-ray demo с переключением на текущий игровой виджет</li>
                 <li>Texture и animated material fills</li>
                 <li>Rigged SVG animation в UMG</li>
                 <li>Slug Text и Rich Text composition</li>
@@ -821,10 +821,10 @@
                 <li>CameraGroup + Transform3D в UMG Designer</li>
                 <li>Figma Import и debug Atlas Viewer</li>
               </ul>
-              <p class="micro">Формулировки ограничены показанными editor/PIE captures.</p>
+              <p class="micro">Список не распространяет выводы за пределы показанных сценариев.</p>
             </section>
             <section class="boundary-box deferred">
-              <h3>Отдельный scope / backlog</h3>
+              <h3>Не входит в текущий результат</h3>
               <ul>
                 <li>Interaction и hit-test parity для world UI</li>
                 <li>Direct-world ABI для CameraGroup / Transform3D</li>
@@ -832,11 +832,11 @@
                 <li>Перенос внешнего detector/scene content в Slug renderer</li>
                 <li>Финальная perf-оценка на целевых production scenes</li>
               </ul>
-              <p class="micro">Эти пункты не нужны, чтобы признать текущий render proof, но нужны перед расширением области применения.</p>
+              <p class="micro">Эти задачи потребуются перед более широким production-применением.</p>
             </section>
           </div>
 
-          <div class="claim"><div class="claim-label">Следующий шаг</div><p>Зафиксировать visual acceptance для X-ray A/B, затем использовать этот же backend в следующем world UI без копирования legacy WidgetComponent-схемы.</p></div>
+          <div class="claim"><div class="claim-label">Следующий шаг</div><p>Выбрать следующий world UI, на котором можно проверить повторное применение backend за пределами демонстрационного X-ray виджета.</p></div>
         </div>
       </div>
     </section>
@@ -844,9 +844,9 @@
 
   <footer class="closing">
     <div>
-      <div class="eyebrow">SlugSvg / renderer direction</div>
-      <h2>One pipeline.<br>More surfaces.</h2>
-      <p>World render перестаёт быть отдельным трюком с текстурой. Он становится ещё одной точкой назначения для того же Slug-authored UI.</p>
+      <div class="eyebrow">SlugSvg / итог пилота</div>
+      <h2>Один Slug backend.<br>UMG, world и decal.</h2>
+      <p>Текущая реализация подтверждает прямой world render для Slug-only UI и задаёт понятные границы для следующего этапа.</p>
       <a class="pill" href="#top">BACK TO TOP ↑</a>
     </div>
   </footer>
